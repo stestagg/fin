@@ -1,3 +1,4 @@
+# (C) Steve Stagg
 
 import sys
 
@@ -13,12 +14,12 @@ class ResultHandler(fin.bus.Handler):
 
     LIMIT = 1
     STREAM = sys.stdout
-    ALLOWED_RESULTS = set(["success", "fail", "error", 
+    ALLOWED_RESULTS = set(["success", "fail", "error",
                            "expectedfail", "skip", "unhandled"])
-    
+
     def __init__(self, stream=STREAM):
         self.stream = stream
-        
+
     def output(self, title, *data):
         data = [str(item) for item in data]
         self.stream.write("\x1b[1m%s\x1b[0m\n%s\n" % (title, "\n".join(data)))
@@ -33,7 +34,7 @@ class ResultHandler(fin.bus.Handler):
     def output_result(self, test, result):
         self.stream.write("%r: %s\n" % (
                 test, result))
-        
+
     def report_result(self, bus, test, result, *data):
         assert result in self.ALLOWED_RESULTS, (
             "%r test result not understood" % (result, ))
@@ -42,7 +43,7 @@ class ResultHandler(fin.bus.Handler):
         self.output_result(test, result)
         if len(data) > 0:
             self.output(test, *data)
-        
+
     def report_test(self, bus, test):
         """This is here to signal that this handler understands these messages
         it just ignores them"""
@@ -63,4 +64,4 @@ class ResultHandler(fin.bus.Handler):
         it just ignores them"""
         pass
 
-        
+

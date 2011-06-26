@@ -1,4 +1,4 @@
-# (C) Cmed Ltd, 2011
+# (C) Steve Stagg, 2011
 
 import unittest2
 import Queue
@@ -23,7 +23,7 @@ class Stage1Handler(QueueHandler):
 
 
 class Stage2Handler(QueueHandler):
-    
+
     def stage2(self, bus, data):
         self.queue.put(data + ".2")
 
@@ -46,7 +46,7 @@ class BusTest(unittest2.TestCase):
         else:
             results = multiprocessing.Queue()
         bus = TestBus(num, results)
-        return bus 
+        return bus
 
     def test_simple_call(self):
         for num in (0, 1, 2):
@@ -67,7 +67,7 @@ class BusTest(unittest2.TestCase):
                 self.assertEqual(bus.queue.get(), "%i.1.2" % num)
             finally:
                 bus.close()
-        
+
 
 if __name__ == "__main__":
     unittest2.main()

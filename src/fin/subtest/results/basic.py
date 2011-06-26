@@ -1,3 +1,4 @@
+# (C) Steve Stagg
 
 """
 Very boring output, not very readable

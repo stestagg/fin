@@ -1,3 +1,4 @@
+# (C) Steve Stagg
 
 """
 Like `basic` but with more info about the test start/stop

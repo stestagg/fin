@@ -1,3 +1,4 @@
+# (C) Steve Stagg
 
 import imp
 import os
