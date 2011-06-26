@@ -4,6 +4,7 @@
 Find and run tests below paths
 """
 
+import multiprocessing
 import optparse
 import sys
 
@@ -12,20 +13,35 @@ import fin.subtest.runner
 import fin.subtest.handlers.path
 import fin.subtest.handlers.unit
 import fin.subtest.handlers.shark
+import fin.util
 
 
 def parse_args(args):
     parser = optparse.OptionParser(usage=__doc__)
-    parser.add_option("-v", "--verbose", dest="verbosity", action="count",
-                      default=0, help="Increase verbosity")
-    parser.add_option("-j", dest="num_processes", 
+    parser.add_option("-j", dest="num_processes",
                       default=multiprocessing.cpu_count(),
+                      metavar=multiprocessing.cpu_count(),
                       type=int, help="Run x processes")
-    parser.add_option("-o", "--outputter", dest="outputter", default="terse",
-                      help="Use the named outputter", metavar="terse")
+    parser.add_option("-o", "--outputter", dest="outputter", default="epic",
+                      help="Use the named outputter", metavar="epic")
+    parser.add_option("-O", "--list-outputters", dest="list_outputters",
+                      action="store_true", default=False,
+                      help="List all available outputters, and do nothing else")
     options, args = parser.parse_args(args)
     options.args = args
     return options
+
+
+def list_outputters():
+    output_modules = fin.util.import_child_modules("fin", "subtest", "results")
+    print fin.color.C.bold("Valid Outputters")
+    print "-" * 16
+    for name, module in sorted(output_modules.items()):
+
+        doc = getattr(module, "__doc__", None)
+        if doc is None:
+            doc = "Undocumented"
+        print fin.color.C.bold(name) + " - " + doc.strip()
 
 
 def get_outputter(name):
@@ -38,13 +54,16 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     options = parse_args(args)
+    if options.list_outputters:
+        list_outputters()
+        return
     if len(options.args) == 0:
         options.args = ["."]
-    
+
     # Shortcut:
     runners = []
     filters = []
-    for module in [fin.subtest.handlers.path, 
+    for module in [fin.subtest.handlers.path,
                    fin.subtest.handlers.unit,
                    fin.subtest.handlers.shark]:
         new_filters, new_runners = module.defaults()
@@ -54,8 +73,7 @@ def main(args=None):
     runner = fin.subtest.runner.TestCaseHandler(
         filters=filters,
         runners=runners)
-    
-    
+
     bus = fin.subtest.runner.SubtestBus([runner, outputter],
                                         options.num_processes)
     for arg in options.args:
@@ -64,6 +82,6 @@ def main(args=None):
     bus.report_totals()
     bus.close()
 
-    
+
 if __name__ == '__main__':
     sys.exit(main())

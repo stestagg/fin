@@ -1,4 +1,8 @@
 
+"""
+Like `basic` but with more info about the test start/stop
+"""
+
 import fin.subtest.resultbase
 
 

@@ -3,10 +3,15 @@
 import os
 import sys
 
-sys.path.append(os.path.join(
+sys.path.insert(0, os.path.join(
     os.path.realpath(os.path.dirname(__file__)),
     "src"))
 
+def usage():
+    print "Usage: ./local path/to/python/file [arg] [arg] ..."
+
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        sys.exit(usage())
     sys.argv = sys.argv[1:]
     execfile(sys.argv[0])

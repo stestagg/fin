@@ -1,4 +1,8 @@
 
+"""
+Very boring output, not very readable
+"""
+
 import fin.subtest.resultbase
 
 

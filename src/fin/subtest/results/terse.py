@@ -1,13 +1,17 @@
 # (C) Steve Stagg
 
+"""
+Output similar to the default unittest output
+"""
+
 import fin.subtest.resultbase
 import fin.subtest.handlers.path
 
 
 class Handler(fin.subtest.resultbase.ResultHandler):
-    
+
     RESULT_CODES = {
-        "success": ".", 
+        "success": ".",
         "fail": "F",
         "error": "E",
         "expectedfail": "X",
@@ -41,4 +45,4 @@ class Handler(fin.subtest.resultbase.ResultHandler):
             if count > 0:
                 message.append("%s: %i" % (name, count))
         self.stream.write("\n%s\n" % ", ".join(message))
-        
+

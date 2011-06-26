@@ -1,13 +1,17 @@
 # (C) Steve Stagg
 
+"""
+Basic subunit output, doesn't implmenent the more retarded aspects of the format
+"""
+
 import fin.subtest.resultbase
 import fin.subtest.handlers.path
 
 
 class Handler(fin.subtest.resultbase.ResultHandler):
-    
+
     MESSAGES = {
-        "success": "success", 
+        "success": "success",
         "fail": "failure",
         "error": "error",
         "expectedfail": "xfail",

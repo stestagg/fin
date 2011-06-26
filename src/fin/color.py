@@ -9,7 +9,7 @@ import fin.string
 class Color(object):
     """ An object for producing pretty terminal output.
     'Dial up' the correct codes by attribute access, then generate the relevant
-    escape sequences, by co-ercing to string.  i.e.:  str(C.red.bold) will 
+    escape sequences, by co-ercing to string.  i.e.:  str(C.red.bold) will
     return the correct sequence for outputting bold, red text.
     Alternately, you could do:  C.red.bold("Foo") to return an object
     that, when printed, will output a bold, red Foo, then reset the terminal
@@ -31,7 +31,7 @@ class Color(object):
         if isinstance(other, Color):
             return self.__class__(self.parts + other.parts)
         return str(self) + other
-    
+
     def __radd__(self, other):
         if isinstance(other, Color):
             return self.__class__(other.parts + self.parts)
@@ -51,8 +51,8 @@ class NoColor(Color):
 
 
 class VtColor(Color):
-    
-    COLORS = ["black", "red", "green", "yellow", 
+
+    COLORS = ["black", "red", "green", "yellow",
               "blue", "purple", "cyan", "white"]
     FG_BASE = 30
     BG_BASE = 40
@@ -60,7 +60,7 @@ class VtColor(Color):
         "bold": 1,
         "reset": 0,
         }
-    
+
     def _get_value(self, name):
         name = name.lower()
         if name in self.EXTRA:
@@ -90,17 +90,19 @@ class VtColor(Color):
 
 
 KNOWN_TERMINAL_TYPES = set([
-    "linux", "term", "xterm", "vt200", 
+    "linux", "term", "xterm", "vt200", "xterm-color",
 ])
 
 
 def auto_color(stream=sys.stdin):
-    """Guess an return the relevant color class for the current environment"""
-    if (stream.isatty() 
-        and os.environ.get("TERM").lower() in KNOWN_TERMINAL_TYPES):
+    """Guess an return the relevant color class for the current environment,
+       Note this doesn't use termcap or anything, yet, just does basic
+       guesswork"""
+    if (stream.isatty()
+        and os.environ.get("TERM", "").lower() in KNOWN_TERMINAL_TYPES):
         return VtColor()
     return NoColor()
 
 
 C = auto_color()
-        
+

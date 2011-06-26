@@ -43,9 +43,9 @@ class ContextLogTest(unittest.TestCase):
             with fin.contextlog.Log("Foo", stream=self):
                 with fin.contextlog.Log("Bar", stream=self):
                     1/0
-                    self.assertEqual(self.lines, 
+                    self.assertEqual(self.lines,
                          ["Foo: ", "  Bar: FAIL", "Foo: FAIL"])
-    
+
     def test_clog(self):
         with fin.contextlog.CLog("Foo", stream=self):
             with fin.contextlog.CLog("Bar", stream=self):
@@ -57,7 +57,7 @@ class ContextLogTest(unittest.TestCase):
             with fin.contextlog.CLog("Bar", stream=self):
                 with fin.contextlog.Log("Baz", stream=self):
                     pass
-        self.assertEqual(self.lines, 
+        self.assertEqual(self.lines,
                          ["Foo: ", "  Bar: ", "    Baz: OK"])
 
     def test_clog_with_log2(self):
@@ -67,7 +67,7 @@ class ContextLogTest(unittest.TestCase):
             with fin.contextlog.CLog("3", stream=self):
                 with fin.contextlog.Log("4", stream=self):
                     pass
-        self.assertEqual(self.lines, 
+        self.assertEqual(self.lines,
                          ["1: ", "  3: ", "    4: OK"])
 
     def test_clog_exception(self):
@@ -75,9 +75,9 @@ class ContextLogTest(unittest.TestCase):
             with fin.contextlog.CLog("Foo", stream=self):
                 with fin.contextlog.CLog("Bar", stream=self):
                     1/0
-        self.assertEqual(self.lines, ["Foo: ", "  Bar: ", 
+        self.assertEqual(self.lines, ["Foo: ", "  Bar: ",
                                       "  Bar: FAIL", "Foo: FAIL"])
-       
+
 
 if __name__ == "__main__":
     unittest.main()

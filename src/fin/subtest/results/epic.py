@@ -1,5 +1,9 @@
 # (C) Steve Stagg
 
+"""
+Colorful output showing multiprocess activity and status
+"""
+
 import struct
 import fcntl
 import termios
@@ -11,11 +15,11 @@ import fin.subtest.handlers.path
 
 C = fin.color.C
 
-def ioctl_GWINSZ(fd): 
-    """Ask the terminal directly what the window size is, Taken from 
+def ioctl_GWINSZ(fd):
+    """Ask the terminal directly what the window size is, Taken from
     http://stackoverflow.com/questions/566746/
     how-to-get-console-window-width-in-python"""
-    try: 
+    try:
         cr = struct.unpack(
             'hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
     except:
@@ -41,12 +45,12 @@ def terminal_size():
 
 
 class Handler(fin.subtest.resultbase.ResultHandler):
-    
+
     DESCRIPTIONS = {
         "success": ("OK", "OK", "OK", C.green),
         "fail": ("F", "Failure", "Failures", C.red),
         "error": ("E", "Error", "Errors", C.red),
-        "expectedfail": ("x", "Expected Failure", 
+        "expectedfail": ("x", "Expected Failure",
                          "Expected Failures", C.yellow),
         "skip": ("s", "Skip", "Skipped", C.blue),
         "unhandled": ("u", "Unhandled", "Unhandled", C.red),
@@ -101,23 +105,23 @@ class Handler(fin.subtest.resultbase.ResultHandler):
             parts.append(", " + color("%i %s" % (count, desc)))
         char_count += 1
         return "%s." % "".join(parts), char_count
-                         
+
     def update(self):
         data = [self._ansii_encode("0G")]
         columns, rows = terminal_size()
         column = 0
-        
+
         runners, runner_len = self._runners()
         data += runners
         data.append(" ")
         column += runner_len + 1
-        
+
         counts, count_len = self.format_counts()
         if column + count_len > columns:
             counts, count_len = self.format_counts(terse=True)
         data.append(counts)
         column += count_len
-        
+
         data.append(self._ansii_encode("K"))
         self.stream.write("".join(data))
         self.stream.flush()

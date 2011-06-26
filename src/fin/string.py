@@ -14,8 +14,8 @@ def substring(data, offset=None, size=None):
 
 
 def ltrim(data, *prefixes):
-    """If data begins with any of prefixes, returns a buffer pointing to 
-    the contents of data with the first matching prefix removed, 
+    """If data begins with any of prefixes, returns a buffer pointing to
+    the contents of data with the first matching prefix removed,
     otherwise returns data"""
     for prefix in prefixes:
         if data.startswith(prefix):
@@ -24,8 +24,8 @@ def ltrim(data, *prefixes):
 
 
 def rtrim(data, *suffixes):
-    """If data ends with any of suffixes, returns a buffer pointing to 
-    the contents of data with the first matching suffix removed, 
+    """If data ends with any of suffixes, returns a buffer pointing to
+    the contents of data with the first matching suffix removed,
     otherwise returns data"""
     for suffix in suffixes:
         if data.endswith(suffix):
@@ -34,7 +34,7 @@ def rtrim(data, *suffixes):
 
 
 class _String(basestring):
-    
+
     ltrim = ltrim
     rtrim = rtrim
 
