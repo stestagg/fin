@@ -42,7 +42,9 @@ class ResultHandler(fin.bus.Handler):
             return
         self.output_result(test, result)
         if len(data) > 0:
-            self.output(test, *data)
+            title = (repr(test) if not hasattr(test, "standard_form")
+                     else test.standard_form())
+            self.output(title, *data)
 
     def report_test(self, bus, test):
         """This is here to signal that this handler understands these messages

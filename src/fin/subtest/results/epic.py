@@ -4,6 +4,7 @@
 Colorful output showing multiprocess activity and status
 """
 
+import itertools
 import struct
 import fcntl
 import termios
@@ -126,9 +127,9 @@ class Handler(fin.subtest.resultbase.ResultHandler):
         self.stream.write("".join(data))
         self.stream.flush()
 
-    def output(self, data):
+    def output(self, data, *more):
         self.stream.write(self._ansii_encode("0G") + self._ansii_encode("K"))
-        for part in data:
+        for part in itertools.chain(data, more):
             self.stream.write("%s\n" % str(part))
 
     def report_result(self, bus, test, result, *data):

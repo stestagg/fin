@@ -11,6 +11,7 @@ import sys
 import fin.subtest.results
 import fin.subtest.runner
 import fin.subtest.handlers.path
+import fin.subtest.handlers.doc
 import fin.subtest.handlers.unit
 import fin.subtest.handlers.shark
 import fin.util
@@ -65,7 +66,8 @@ def main(args=None):
     filters = []
     for module in [fin.subtest.handlers.path,
                    fin.subtest.handlers.unit,
-                   fin.subtest.handlers.shark]:
+                   fin.subtest.handlers.shark,
+                   fin.subtest.handlers.doc]:
         new_filters, new_runners = module.defaults()
         runners.extend(new_runners)
         filters.extend(new_filters)

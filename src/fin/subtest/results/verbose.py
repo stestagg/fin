@@ -38,8 +38,10 @@ class Handler(fin.subtest.resultbase.ResultHandler):
     def ignore_result(self, test, result=None):
         return isinstance(test, fin.subtest.handlers.path.PathTest)
 
-    def output(self, data):
+    def output(self, data, *more):
         for part in data:
+            self.stream.write("%s\n" % str(part))
+        for part in more:
             self.stream.write("%s\n" % str(part))
 
     def report_result(self, bus, test, result, *data):
