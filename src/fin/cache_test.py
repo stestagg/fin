@@ -2,23 +2,23 @@
 
 import unittest2 as unittest
 
-import collections 
+import collections
 import itertools
 
 import fin.cache
 
 
 class SimpleTest(unittest.TestCase):
-    
+
     def test_property(self):
         class Counter(object):
             def __init__(self):
                 self.counter = itertools.count()
-            
+
             @property
             def count(self):
                 return self.counter.next()
-            
+
             @fin.cache.property
             def dont_count(self):
                 return self.counter.next()
@@ -32,11 +32,11 @@ class SimpleTest(unittest.TestCase):
         class Counter(object):
             def __init__(self):
                 self.counter = itertools.count()
-            
+
             @fin.cache.property
             def count(self):
                 return self.counter.next()
-            
+
         cache1 = Counter()
         cache2 = Counter()
         cache1.count = lambda x: "a"
@@ -48,11 +48,11 @@ class SimpleTest(unittest.TestCase):
         class Counter(object):
             def __init__(self):
                 self.counter = itertools.count()
-            
+
             @fin.cache.method
             def count(self, data):
                 return self.counter.next()
-            
+
         cache = Counter()
         a = {"b": {"c": []}}
         self.assertEqual(cache.count(a), 0)
@@ -64,7 +64,7 @@ class SimpleTest(unittest.TestCase):
         class Counter(object):
             def __init__(self):
                 self.count = 0
-            
+
             @property
             def div5(self):
                 return self.count/5
@@ -83,7 +83,7 @@ class SimpleTest(unittest.TestCase):
         class Counter(object):
             def __init__(self):
                 self.counter = itertools.count()
-            
+
             @fin.cache.method
             def append(self, l):
                 return l + [self.counter.next()]
@@ -97,7 +97,7 @@ class SimpleTest(unittest.TestCase):
 
 
 class GeneratorTest(unittest.TestCase):
-    
+
     def test_generator(self):
         class SsItertools(object):
             @fin.cache.generator
@@ -130,9 +130,9 @@ class GeneratorTest(unittest.TestCase):
         self.assertEqual(counter.next(), 11)
 
     def test_arguments(self):
-        
+
         class Apples(object):
-            
+
             def __init__(self, apples):
                 self.apples = apples
 
@@ -162,7 +162,7 @@ class GeneratorTest(unittest.TestCase):
 
 
 class ExampleCache(object):
-    
+
     def __init__(self, callback):
         self.callback = callback
         self.epoch = 1
@@ -187,7 +187,7 @@ class ExampleCache(object):
     def aluminium(self):
         self.callback("aluminium")
         return "stuff"
-    
+
     @fin.cache.property
     @fin.cache.depends("epoch")
     def hydrogen(self):
@@ -199,10 +199,10 @@ class ExampleCache(object):
     def oxygen(self):
         self.callback("oxygen")
         return "O"
-    
+
 
 class CacheTest(unittest.TestCase):
-    
+
     def setUp(self):
         self.counters = collections.defaultdict(int)
         self.counter = 0
@@ -265,7 +265,7 @@ class FactorialTest(unittest.TestCase):
     def factorial(self, num):
         if num <= 1:
             return 1
-        return num * self.factorial(num - 1) 
+        return num * self.factorial(num - 1)
 
     def test_factorial(self):
         for i in range(2000):

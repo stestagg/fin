@@ -59,3 +59,28 @@ def import_child_modules(*parts):
         except ImportError:
             continue
     return modules
+
+
+def get_fully_qualified_object(name):
+    """name could be, for example:  some.module.ClassA.method_b
+       and this method should return a reference to method_b
+       even if some.module isn't imported"""
+    parts = name.split(".")
+    base_module = parts[0]
+    path = parts[1:]
+    __import__(base_module)
+    current_object = sys.modules[parts[0]]
+    partial_path = [base_module]
+    for part in path:
+        partial_path.append(part)
+        try:
+            current_object = getattr(current_object, part)
+        except AttributeError:
+            try:
+                __import__(".".join(partial_path))
+            except ImportError:
+                raise AttributeError("%r does not contain %r" %
+                                     (".".join(partial_path[:-1]), part))
+            else:
+                current_object = getattr(current_object, part)
+    return current_object

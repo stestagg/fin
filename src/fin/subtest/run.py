@@ -73,8 +73,7 @@ def main(args=None):
         filters.extend(new_filters)
     outputter = get_outputter(options.outputter)()
     runner = fin.subtest.runner.TestCaseHandler(
-        filters=filters,
-        runners=runners)
+        filters=filters, runners=runners)
 
     bus = fin.subtest.runner.SubtestBus([runner, outputter],
                                         options.num_processes)
