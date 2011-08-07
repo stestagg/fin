@@ -6,9 +6,9 @@ In mature systems, it's not uncommon to find single logical entities being repre
 
 modelmapper attempts to automate the optimisation of the mapping between these models.
 
-For example:  if an entity X has two code models:  OldModel, and NewModel.  These classes may be expensive to create, and NewModel objects contain references to OldModel objects.
+For example:  if an entity X has two code models:  `OldModel`, and `NewModel`.  These classes may be expensive to create, and `NewModel` objects contain references to `OldModel` objects.
 
-Now let's say you're provided an instance of NewModel for this entity, and you need code on OldModel, the fastest way to get this is to call `new_model.get_old_model()`.  But maybe in a different circumstance, you only have X's id.  In that case, it's faster to create `OldModel` directly.
+Now let's say you're provided an instance of `NewModel` for this entity, and you need code on `OldModel`, the fastest way to get this is to call `new_model.get_old_model()`.  But maybe in a different circumstance, you only have X's id.  In that case, it's faster to create `OldModel` directly.
 
 Working out the optimal 'route' from what you have to what you need is complex, and is easily broken by other code changes.  This module tries to make creating such mappers, and maintaining them eas(y`|`ier).
 
