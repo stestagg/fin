@@ -4,6 +4,7 @@
 Find and run tests below paths
 """
 
+import os
 import multiprocessing
 import optparse
 import sys
@@ -74,6 +75,9 @@ def main(args=None):
     outputter = get_outputter(options.outputter)()
     runner = fin.subtest.runner.TestCaseHandler(
         filters=filters, runners=runners)
+
+    os.close(sys.stdin.fileno())
+    sys.stdin.close()
 
     bus = fin.subtest.runner.SubtestBus([runner, outputter],
                                         options.num_processes)

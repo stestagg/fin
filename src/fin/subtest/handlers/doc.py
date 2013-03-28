@@ -4,7 +4,6 @@ import copy
 import doctest
 import fnmatch
 import os
-import types
 import traceback
 
 import fin.subtest.runner
@@ -54,12 +53,16 @@ class DoctestFileTestHandler(fin.subtest.runner.TestRunner):
         base = os.path.abspath(test.path)
         try:
             module = fin.util.import_module_by_filename(base)
-        except Exception, e:
+        except (Exception, SystemExit), e:
             msg = traceback.format_exc()
             bus.report_result(test, "error", "Unimportable Module", msg)
             return
-        for case in self.cases_from_module(module):
-            bus.found_test(DoctestTest(test.path, case))
+        try:
+            for case in self.cases_from_module(module):
+                bus.found_test(DoctestTest(test.path, case))
+        except (Exception, SystemExit), e:
+            msg = traceback.format_exc()
+            bus.report_result(test, "error", "Error parsing module", msg)
 
 
 class DocTestRunner(doctest.DocTestRunner):

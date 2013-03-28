@@ -2,7 +2,6 @@
 
 import fnmatch
 import os
-import types
 import traceback
 import unittest
 
@@ -111,7 +110,7 @@ class UnitFileTestHandler(fin.subtest.runner.TestRunner):
         base = os.path.abspath(test.path)
         try:
             module = fin.util.import_module_by_filename(base)
-        except Exception, e:
+        except (Exception, SystemExit), e:
             msg = traceback.format_exc()
             bus.report_result(test, "error", "Unimportable Module", msg)
             return
@@ -130,7 +129,13 @@ class UnittestHandler(fin.subtest.runner.TestRunner):
         base = os.path.abspath(test.filename)
         module = fin.util.import_module_by_filename(base)
         case = getattr(module, test.case)
-        case(test.method).run(UnittestCompatibleResult(bus, test))
+        try:
+            case(test.method).run(UnittestCompatibleResult(bus, test))
+        except Exception, e:
+            msg = traceback.format_exc()
+            bus.report_result(test, "error", "Uncaught Exception", msg)
+        except SystemExit:
+            bus.report_result(test, "error", "Called sys exit", e)
     
 
 def defaults():
