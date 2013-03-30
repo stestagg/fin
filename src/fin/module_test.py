@@ -3,10 +3,10 @@
 import sys
 import os
 import contextlib
-import unittest
 import tempfile
 import shutil
 
+import fin.unittest as unittest
 import fin.color
 import fin.module
 

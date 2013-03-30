@@ -3,8 +3,8 @@
 from __future__ import with_statement
 
 import cStringIO as StringIO
-import unittest2 as unittest
 
+import fin.unittest as unittest
 import fin.contextlog
 
 

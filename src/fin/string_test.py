@@ -1,6 +1,6 @@
 # (C) Steve Stagg
 
-import unittest2 as unittest
+import fin.unittest as unittest
 
 import fin.string
 

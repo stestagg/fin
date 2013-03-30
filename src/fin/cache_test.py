@@ -1,14 +1,13 @@
 # (C) Steve Stagg
 
-import unittest2 as unittest
-
 import collections
 import itertools
 
+import fin.unittest
 import fin.cache
 
 
-class SimpleTests(unittest.TestCase):
+class SimpleTests(fin.unittest.TestCase):
 
     def test_property(self):
         class Counter(object):
@@ -96,7 +95,7 @@ class SimpleTests(unittest.TestCase):
         self.assertEqual(cache.append([1, 2, 3]), [1, 2, 3, 2])
 
 
-class GeneratorTest(unittest.TestCase):
+class GeneratorTest(fin.unittest.TestCase):
 
     def test_generator(self):
         class SsItertools(object):
@@ -201,7 +200,7 @@ class ExampleCache(object):
         return "O"
 
 
-class CacheTest(unittest.TestCase):
+class CacheTest(fin.unittest.TestCase):
 
     def setUp(self):
         self.counters = collections.defaultdict(int)
@@ -258,7 +257,7 @@ class CacheTest(unittest.TestCase):
         self.assertEqual(a.hydrogen, 1)
 
 
-class FactorialTest(unittest.TestCase):
+class FactorialTest(fin.unittest.TestCase):
 
     #Try disabling the cache decorator to see what happens
     @fin.cache.method
@@ -273,4 +272,4 @@ class FactorialTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    fin.unittest.main()
