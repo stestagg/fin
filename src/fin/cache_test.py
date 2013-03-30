@@ -8,7 +8,7 @@ import itertools
 import fin.cache
 
 
-class SimpleTest(unittest.TestCase):
+class SimpleTests(unittest.TestCase):
 
     def test_property(self):
         class Counter(object):

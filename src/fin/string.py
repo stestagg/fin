@@ -1,4 +1,3 @@
-# (C) Steve Stagg
 
 
 def substring(data, offset=None, size=None):

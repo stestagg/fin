@@ -8,7 +8,7 @@ import unittest2 as unittest
 import fin.contextlog
 
 
-class ContextLogTest(unittest.TestCase):
+class ContextLogTests(unittest.TestCase):
 
     def setUp(self):
         self.data = []
