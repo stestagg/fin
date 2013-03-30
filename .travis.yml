@@ -8,4 +8,4 @@ install:
  - python setup.py install
 
 script: 
- - nosetests src/
+ - nosetests -v -s src/
