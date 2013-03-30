@@ -5,7 +5,7 @@ python:
  - "2.7"
 
 install: 
- - echo $TRAVIS_PYTHON_VERSION
+ - python -c "import sys; sys.exit(sys.version<(2,7))" || pip install unittest2
  - python setup.py install
 
 script: 
