@@ -6,8 +6,6 @@ A collection of useful Python modules providing utility and testing functionalit
 Basic Module Overview
 ----------------------
 
- * `fin.bus`
-  * A message bus designed for multiprocess usage
  * `fin.cache`
   * A lightweight, unobtrusive method/property caching model, exposed as a set of decorators
  * `fin.color`
@@ -15,8 +13,8 @@ Basic Module Overview
  * `fin.contextlog`
   * Basic stdout/stderr logging context managers
  * `fin.named`
-  * A namedtuple implementation for python 2.5
+  * A namedtuple implementation for python 2.5 (defers to builtin implementation when available)
  * `fin.string`
   * Simple string subclass providing some extra methods
- * `fin.util`
-  * Utility functions, mainly for dealing with modules and imports (todo: rename)
+ * `fin.module`
+  * Module import/finding/searching functions
