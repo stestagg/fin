@@ -1,6 +1,6 @@
 # (C) Steve Stagg
 
-import unittest2 as unittest
+import fin.testing as unittest
 
 import fin.color
 
