@@ -50,6 +50,9 @@ def path_to_module_parts(path, auto_add=False):
                 raise NoSysPathFound(path)
 
     relative_path = module_path[len(base_path):].strip(os.path.sep)
+    filename = os.path.basename(relative_path)
+    if fin.string.rtrim(filename, *PY_EXTENSIONS) == "__init__":
+        relative_path = os.path.dirname(relative_path)
     return relative_path.split(os.path.sep)
 
 

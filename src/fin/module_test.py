@@ -162,13 +162,13 @@ class ModuleTests(unittest.TestCase):
 
     def test_importing_library_module(self):
         with module_context(self.test_modules):
-            math = fin.module.import_module_by_name_parts("math")
+            sys_email = fin.module.import_module_by_name_parts("email")
         with module_context(self.test_modules):
             self.assertSequenceEqual(
-                fin.module.path_to_module_parts(math.__file__), ["math"])
+                fin.module.path_to_module_parts(sys_email.__file__), ["email"])
         with module_context(self.test_modules):
-            new_math = fin.module.import_module_by_path(math.__file__)
-            self.assertAlmostEqual(new_math.pi, 3.141, places=2)
+            math_mod = fin.module.import_module_by_name_parts("math")
+            self.assertAlmostEqual(math_mod.pi, 3.141, places=2)
 
 
 if __name__ == "__main__":
