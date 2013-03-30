@@ -8,7 +8,7 @@ import contextlib
 import tempfile
 import shutil
 
-import fin.unittest as unittest
+import fin.testing as unittest
 import fin.color
 import fin.module
 
