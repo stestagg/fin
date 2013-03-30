@@ -4,6 +4,8 @@ try:
 except ImportError:
 	import unittest
 
+print unittest
+print unittest.__file__
 
 class TestCase(unittest.TestCase):
 	pass
