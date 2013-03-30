@@ -3,6 +3,7 @@ fin Utility Library [![Build Status](https://travis-ci.org/stestagg/fin.png)](ht
 
 A collection of useful Python modules providing utility and testing functionality.
 
+![Shark Fin](https://github.com/stestagg/fin/blob/master/logo.png?raw=true)
 Basic Module Overview
 ----------------------
 
