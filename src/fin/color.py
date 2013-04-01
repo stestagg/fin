@@ -1,4 +1,3 @@
-# (C) Steve Stagg
 
 import os
 import sys

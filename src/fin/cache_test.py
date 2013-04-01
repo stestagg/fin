@@ -1,4 +1,3 @@
-# (C) Steve Stagg
 
 import collections
 import itertools

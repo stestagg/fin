@@ -1,3 +1,3 @@
 
 class Exception(Exception):
-	pass
+    pass
