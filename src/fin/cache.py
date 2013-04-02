@@ -14,19 +14,23 @@ class ResultCache(object):
     def __init__(self, fun):
         self._fun = fun
 
-    def get_cache(self, obj, fun):
+    def get_cache(self, obj):
         if not hasattr(obj, CACHE_KEY):
             setattr(obj, CACHE_KEY, {})
         cache = getattr(obj, CACHE_KEY)
-        if fun not in cache:
-            cache[fun] = ({}, [])
-        return cache[fun]
+        if self._fun not in cache:
+            cache[self._fun] = ({}, [])
+        return cache[self._fun]
+
+    def reset(self, obj):
+        if hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY):
+            del getattr(obj, CACHE_KEY)[self._fun]
 
     def _run(self, obj, args, kwargs):
         return self._fun(obj, *args, **kwargs)
 
     def _get_result(self, obj, args, kwargs):
-        dict_cache, list_cache = self.get_cache(obj, self._fun)
+        dict_cache, list_cache = self.get_cache(obj)
         arg_key = (self.get_dependancies(obj), args, tuple(kwargs.items()))
         try:
             hash(arg_key)
@@ -105,20 +109,21 @@ def depends(*attributes):
     return mutate
 
 
-def method(fun):
-    cache = ResultCache(fun)
+def _wrap_fun_with_cache(fun, cache_type):
+    cache = cache_type(fun)
     @functools.wraps(fun)
     def wrapper(obj, *args, **kwargs):
         return cache.get_result(obj, args, kwargs)
+    wrapper.reset = cache.reset
     return wrapper
+
+
+def method(fun):
+    return _wrap_fun_with_cache(fun, ResultCache)
 
 
 def generator(fun):
-    cache = GeneratorCache(fun)
-    @functools.wraps(fun)
-    def wrapper(obj, *args, **kwargs):
-        return cache.get_result(obj, args, kwargs)
-    return wrapper
+    return _wrap_fun_with_cache(fun, GeneratorCache)
 
 
 class property(object):
@@ -134,6 +139,8 @@ class property(object):
             return self._method(inst)
 
     def __set__(self, inst, obj):
+        if obj is None:
+            return self._method.reset(inst)
         assert callable(obj)
         if not hasattr(inst, PROPERTY_OVERRIDE_KEY):
             setattr(inst, PROPERTY_OVERRIDE_KEY, {})
