@@ -58,6 +58,23 @@ class SimpleTests(fin.testing.TestCase):
         a["b"]["c"].append(1)
         self.assertEqual(cache.count(a), 1)
 
+    def test_doc_inheritance(self):
+        class Foo(object):
+
+            @fin.cache.method
+            def meth(self, data):
+                "a method"
+                pass
+
+            @fin.cache.property
+            def prop(self):
+                "a property"
+                pass
+
+        self.assertEqual(Foo.meth.__doc__, "a method")
+        self.assertEqual(Foo().meth.__doc__, "a method")
+        self.assertEqual(Foo.prop.__doc__, "a property")
+
     def test_getting_classattr(self):
         class Counter(object):
             def __init__(self):

@@ -130,6 +130,7 @@ class property(object):
 
     def __init__(self, fun, wrapper=method):
         self._method = wrapper(fun)
+        self.__doc__ = getattr(fun, "__doc__", None)
 
     def __get__(self, inst, cls):
         if inst is None:
