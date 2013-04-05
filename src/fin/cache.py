@@ -132,6 +132,8 @@ class property(object):
         self._method = wrapper(fun)
 
     def __get__(self, inst, cls):
+        if inst is None:
+            return self
         if (hasattr(inst, PROPERTY_OVERRIDE_KEY)
             and self in getattr(inst, PROPERTY_OVERRIDE_KEY)):
             return getattr(inst, PROPERTY_OVERRIDE_KEY)[self](inst)
@@ -145,6 +147,9 @@ class property(object):
         if not hasattr(inst, PROPERTY_OVERRIDE_KEY):
             setattr(inst, PROPERTY_OVERRIDE_KEY, {})
         getattr(inst, PROPERTY_OVERRIDE_KEY)[self] = obj
+
+    def reset(self, inst):
+        self._method.reset(inst)
 
 
 def uncached_property(fun):

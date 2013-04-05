@@ -58,6 +58,18 @@ class SimpleTests(fin.testing.TestCase):
         a["b"]["c"].append(1)
         self.assertEqual(cache.count(a), 1)
 
+    def test_getting_classattr(self):
+        class Counter(object):
+            def __init__(self):
+                self.counter = itertools.count()
+
+            @fin.cache.property
+            def count(self, data):
+                return self.counter.next()
+
+        ob = Counter.count
+        assert isinstance(ob, fin.cache.property)
+
     def test_resetting(self):
         class Counter(object):
             def __init__(self):
@@ -82,6 +94,9 @@ class SimpleTests(fin.testing.TestCase):
         cache.do_count.reset(cache)
         self.assertEqual(cache.do_count(), 3)
         self.assertEqual(cache.do_count(), 3)
+        Counter.count.reset(cache)
+        self.assertEqual(cache.count, 4)
+
 
     def test_depends(self):
         class Counter(object):
