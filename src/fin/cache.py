@@ -23,8 +23,11 @@ class ResultCache(object):
         return cache[self._fun]
 
     def reset(self, obj):
-        if hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY):
+        if self.is_cached:
             del getattr(obj, CACHE_KEY)[self._fun]
+
+    def is_cached(self, obj):
+        return hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY)
 
     def _run(self, obj, args, kwargs):
         return self._fun(obj, *args, **kwargs)
@@ -151,6 +154,9 @@ class property(object):
 
     def reset(self, inst):
         self._method.reset(inst)
+
+    def is_cached(self, inst):
+        return self._method.is_cached(inst)
 
 
 def uncached_property(fun):
