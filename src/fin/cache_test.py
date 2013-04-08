@@ -150,6 +150,33 @@ class SimpleTests(fin.testing.TestCase):
         self.assertEqual(cache.append([1, 2]), [1, 2, 0])
         self.assertEqual(cache.append([1, 2, 3]), [1, 2, 3, 2])
 
+    def test_has_cached(self):
+        class Ob(object):
+
+            @fin.cache.method
+            def method(self, l):
+                return l
+
+            @fin.cache.property
+            def prop(self):
+                return True
+
+        cache = Ob()
+        self.assertFalse(cache.method.has_cached(cache))
+        self.assertFalse(Ob.prop.has_cached(cache))
+        self.assertFalse(cache.method.has_cached(cache))
+        self.assertFalse(Ob.prop.has_cached(cache))
+        cache.method(1)
+        self.assertTrue(cache.method.has_cached(cache))
+        self.assertFalse(Ob.prop.has_cached(cache))
+        cache.method.reset(cache)
+        cache.prop
+        self.assertFalse(cache.method.has_cached(cache))
+        self.assertTrue(Ob.prop.has_cached(cache))
+        cache.method(2)
+        self.assertTrue(cache.method.has_cached(cache))
+        self.assertTrue(Ob.prop.has_cached(cache))
+
 
 class GeneratorTest(fin.testing.TestCase):
 
