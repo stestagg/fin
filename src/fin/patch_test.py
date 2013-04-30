@@ -18,6 +18,15 @@ class PatchTests(unittest.TestCase):
         self.assertTrue(Foo.TRUE)
 
     def test_patching_library_func(self):
-        a = random.random()
-        b = random.random()        
-        self.assertNotEqual(a, b)
+        nums = set()
+        # Theoretically, this could fail, but the probability is very low
+        for i in range(5):
+            nums.add(random.random())
+        self.assertTrue(len(nums) > 1)
+        with fin.patch.patch(random, "random", lambda: 1):
+            for i in range(5):
+                self.assertTrue(random.random(), 1)
+        nums = set()
+        for i in range(5):
+            nums.add(random.random())
+        self.assertTrue(len(nums) > 1)
