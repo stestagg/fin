@@ -132,6 +132,10 @@ class JsonTest(fin.testing.TestCase):
     def setUp(self):
         self.raw = """{"a": 1, "b": {"a": 2}}"""
         self.config = fin.config.JSONSource("", data=self.raw)
+        try:
+            self.config.json
+        except RuntimeError:
+            raise fin.testing.unittest.SkipTest("No JSON library available")
 
     def test_keys(self):
         self.assertItemsEqual(self.config.get_keys(), ["a", "b"])

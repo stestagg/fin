@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 
 import sys
@@ -36,7 +35,6 @@ def make_tree(base, sub):
         for sub, children in sub.iteritems():
             make_tree(base, sub)
             make_tree(os.path.join(base, sub), children)
-
 
 
 class ModuleTests(unittest.TestCase):

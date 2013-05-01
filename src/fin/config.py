@@ -3,7 +3,11 @@ from __future__ import with_statement
 
 import ConfigParser
 import os
-import json
+
+try:
+    import json
+except ImportError:
+    pass
 
 import fin.cache
 
@@ -155,8 +159,15 @@ class JSONSource(DictSource):
 
     def __init__(self, filename, data=None):
         if data is not None:
-            self.data = lambda x: json.loads(data)
+            self.data = lambda x: self.json.loads(data)
         self.filename = filename
+
+    @property
+    def json(self):
+        try:
+            return json
+        except NameError:
+            raise RuntimeError("No JSON libary available")
 
     @fin.cache.property
     @fin.cache.depends("filename")
@@ -164,7 +175,7 @@ class JSONSource(DictSource):
         if not os.path.exists(self.filename):
             return {}
         with open(self.filename) as fp:
-            return json.load(fp)
+            return self.json.load(fp)
 
 
 class MultiSource(ConfigSource):
