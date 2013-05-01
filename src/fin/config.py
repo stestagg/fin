@@ -3,11 +3,33 @@ from __future__ import with_statement
 
 import ConfigParser
 import os
+import json
 
 import fin.cache
 
 
 NOT_SET = object()
+
+
+class TypedConfig(object):
+
+    TRUTH_VALUES = frozenset(["yes", "t", "true", "1", "y", "on"])
+    TYPE_PARSERS = {
+        bool: lambda self, y: self._to_bool(y),
+    }
+
+    def _to_bool(self, value):
+        return value.lower() in self.TRUTH_VALUES
+
+    def get_typed(self, type_spec, keys, default=None):
+        assert len(keys) > 0
+        parser = type_spec
+        if type_spec in self.TYPE_PARSERS:
+            parser = lambda x: self.TYPE_PARSERS[type_spec](self, x)
+        value = self.get(keys, NOT_SET)
+        if value is NOT_SET:
+            return default
+        return parser(value)
 
 
 class ConfigSource(object):
@@ -27,9 +49,11 @@ class ConfigSource(object):
         return default if rv is NOT_SET else rv
 
     def get_keys(self, *parents):
+        """Return a collection of all keys that have the specified parent keys."""
         raise NotImplementedError()
 
     def get_value(self, *keys):
+        """ Given a particular multi-part key, return the corresponding value"""
         raise NotImplementedError()
 
 
@@ -42,7 +66,6 @@ class EnvironSource(ConfigSource):
         return ("_".join((self.prefix, ) + keys)).upper()
 
     def get_value(self, *keys):
-        key = ("_".join(keys)).upper()
         return os.environ.get(self._convert_keys(keys), NOT_SET)
 
     def get_keys(self, *parents):
@@ -56,7 +79,7 @@ class ConfigParserSource(ConfigSource):
 
     def __init__(self, filename):
         self.filename = filename
-            
+
     @fin.cache.property
     @fin.cache.depends("filename")
     def _parser(self):
@@ -85,7 +108,7 @@ class ConfigParserSource(ConfigSource):
             for section in self._find_sections(section_name):
                 if self._parser.has_option(section, section_key):
                     return self._parser.get(section, section_key)
-        return NOT_SET    
+        return NOT_SET
 
     def get_keys(self, *parents):
         matching = set()
@@ -130,7 +153,9 @@ class DictSource(ConfigSource):
 
 class JSONSource(DictSource):
 
-    def __init__(self, filename):
+    def __init__(self, filename, data=None):
+        if data is not None:
+            self.data = lambda x: json.loads(data)
         self.filename = filename
 
     @fin.cache.property
@@ -161,7 +186,7 @@ class MultiSource(ConfigSource):
         return keys
 
 
-class Config(MultiSource):
+class Config(MultiSource, TypedConfig):
 
     def __init__(self, name):
         self.name = name
@@ -170,13 +195,10 @@ class Config(MultiSource):
     @fin.cache.depends("name")
     def sources(self):
         config_name = "%s.conf" % self.name
-        xdg_path = os.environ.get("XDG_CONFIG_HOME", 
+        xdg_path = os.environ.get("XDG_CONFIG_HOME",
                                   os.path.expanduser("~/.config"))
         user_config_path = os.path.join(xdg_path, config_name)
         system_config_path = os.path.join("/etc/%s" % config_name)
-        return (
-            EnvironSource(self.name),
-            ConfigParserSource(user_config_path),
-            ConfigParserSource(system_config_path),
-            )
-
+        return (EnvironSource(self.name),
+                ConfigParserSource(user_config_path),
+                ConfigParserSource(system_config_path))

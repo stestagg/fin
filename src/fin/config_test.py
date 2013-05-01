@@ -20,8 +20,7 @@ class EnvironSourceTest(fin.testing.TestCase):
         for key, value in self.before.iteritems():
             os.environ[key] = value
 
-
-    def test_getting_simple(self):    
+    def test_getting_simple(self):
         os.environ["FOO_BAR"] = "a"
         os.environ["FOOBAR"] = "b"
         source = fin.config.EnvironSource("FOO")
@@ -49,11 +48,12 @@ class ConfigParserTest(fin.testing.TestCase):
     def setUp(self):
         fd, self.config_path = tempfile.mkstemp()
         self.file = os.fdopen(fd, "wb", 0)
-        self.file.write("\n".join(["[.]",
+        self.file.write(
+            "\n".join(["[.]",
             "first.a=1", "zero.c=2", "second.a.b=9",
             "first.c.sub2=8",
             "[FiRsT]", "a=3", "b=4", "c.sub=5",
-            "[first]", "b = 6", "d=7", "[second]", "b=4", 
+            "[first]", "b = 6", "d=7", "[second]", "b=4",
             "[third]", "a.b=12"]))
         self.source = fin.config.ConfigParserSource(self.config_path)
 
@@ -62,11 +62,11 @@ class ConfigParserTest(fin.testing.TestCase):
         os.unlink(self.config_path)
 
     def test_get_keys(self):
-        self.assertItemsEqual(self.source.get_keys(), 
+        self.assertItemsEqual(self.source.get_keys(),
                               ["zero", "first", "second", "third"])
-        self.assertItemsEqual(self.source.get_keys("first"), 
+        self.assertItemsEqual(self.source.get_keys("first"),
                               ["a", "b", "c", "d"])
-        self.assertItemsEqual(self.source.get_keys("first", "c"), 
+        self.assertItemsEqual(self.source.get_keys("first", "c"),
                               ["sub", "sub2"])
         self.assertItemsEqual(self.source.get_keys("second"), ["a", "b"])
         self.assertItemsEqual(self.source.get_keys("third"), ["a"])
@@ -89,7 +89,7 @@ class DictConfigTest(fin.testing.TestCase):
 
     def test_get_nested_value(self):
         source = fin.config.DictSource({"a": {"b": 2}})
-        self.assertEqual(source.get_value("a", "b"), "2")        
+        self.assertEqual(source.get_value("a", "b"), "2")
         self.assertEqual(source.get_value("a", "c"), fin.config.NOT_SET)
 
     def test_get_keys(self):
@@ -118,13 +118,27 @@ class MultiSourceTest(fin.testing.TestCase):
 
     def test_get_nested(self):
         sources = [fin.config.DictSource(f) for f in [
-            {"a": {"b": 1, "c": 2}}, 
+            {"a": {"b": 1, "c": 2}},
             {"a": {"b": 4, "d": 5}, "b": 3}]]
         source = fin.config.MultiSource(sources)
         self.assertItemsEqual(source.get_keys(), ["a", "b"])
         self.assertItemsEqual(source.get_keys("a"), ["b", "c", "d"])
         self.assertItemsEqual(source.get_keys("a", "b"), [])
         self.assertItemsEqual(source.get_keys("f"), [])
+
+
+class JsonTest(fin.testing.TestCase):
+
+    def setUp(self):
+        self.raw = """{"a": 1, "b": {"a": 2}}"""
+        self.config = fin.config.JSONSource("", data=self.raw)
+
+    def test_keys(self):
+        self.assertItemsEqual(self.config.get_keys(), ["a", "b"])
+        self.assertItemsEqual(self.config.get_keys("b"), ["a"])
+
+    def test_get_value(self):
+        self.assertEqual(self.config["b", "a"], '2')
 
 
 class ConfigTest(fin.testing.TestCase):
@@ -170,5 +184,25 @@ class ConfigTest(fin.testing.TestCase):
         self.assertEqual(self.source["bar.BAZ"], "2")
 
 
+class TypedTest(fin.testing.TestCase):
+
+    class TypedConf(fin.config.DictSource, fin.config.TypedConfig):
+        pass
+
+    def test_get_bool(self):
+        conf = self.TypedConf({"a": "yes", "b": "no"})
+        self.assertEqual(conf.get_typed(bool, "a"), True)
+        self.assertEqual(conf.get_typed(bool, "b"), False)
+
+    def test_get_int(self):
+        conf = self.TypedConf({"a": "1", "b": "2", "c": "foo"})
+        self.assertEqual(conf.get_typed(int, "a"), 1)
+        self.assertEqual(conf.get_typed(int, "b"), 2)
+        self.assertEqual(conf.get_typed(int, "d"), None)
+        self.assertEqual(conf.get_typed(int, "d", "foo"), "foo")
+        with self.assertRaises(ValueError):
+            conf.get_typed(int, "c")
+
+
 if __name__ == "__main__":
-    sys.exit(fin.testing.main())
+    fin.testing.main()
