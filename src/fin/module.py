@@ -11,7 +11,9 @@ import fin.exception
 
 PY_EXTENSIONS = [ext for ext, _, _ in imp.get_suffixes()]
 
+
 class PathNotImportable(fin.exception.Exception, ImportError): pass
+
 
 class NoSysPathFound(fin.exception.Exception, ImportError): pass
 
@@ -69,7 +71,7 @@ def import_module_by_path(path, auto_add=False):
     return import_module_by_name_parts(*parts)
 
 
-def import_child_modules(parts, ignore="^[\._].*"):
+def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
     matcher = re.compile(ignore)
     parent_module = import_module_by_name_parts(*parts)
     parent_dir = os.path.dirname(parent_module.__file__)
@@ -83,8 +85,9 @@ def import_child_modules(parts, ignore="^[\._].*"):
         try:
             modules[child_name] = import_module_by_name_parts(
                 *(tuple(parts) + (child_name, )))
-        except ImportError:
-            continue
+        except ImportError, e:
+            if error_callback is not None:
+                error_callback(e)
     return modules
 
 

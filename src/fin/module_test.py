@@ -64,6 +64,7 @@ class ModuleTests(unittest.TestCase):
                 open(os.path.join(self.temp_dir, *file_parts), "wb").close()
             for py in [
                 ("a", "b", "ab.py"),
+                ("a", "b", "ab2.py"),
                 ("a2", "b.2", "a2b2.py"),
                 ("a2", "b.2", "c2", "a2b2c.py"),
                 ("n", "n", "a", "nna.py"),
@@ -106,7 +107,7 @@ class ModuleTests(unittest.TestCase):
             def test(parts, equals="", auto_add=False):
                 module_parts = parts.split("/")
                 equals = equals.split(".")
-                result =fin.module.path_to_module_parts(
+                result = fin.module.path_to_module_parts(
                     os.path.join(base, *module_parts), auto_add=auto_add)
                 self.assertSequenceEqual(result, equals)
             test("a/b", "a.b")
@@ -134,6 +135,26 @@ class ModuleTests(unittest.TestCase):
             with self.assertRaises(ImportError):
                 fin.module.import_module_by_name_parts("n", "n", "a", "nna")
 
+    def test_importing_child_modules(self):
+        with module_context(self.test_modules):
+            mods = fin.module.import_child_modules(["a", "b"])
+            self.assertEqual(mods["ab"].ME, "ab.py")
+            self.assertEqual(mods["ab2"].ME, "ab2.py")
+            with open(os.path.join(self.test_modules, "a", "b", "err.py"), "wb") as fh:
+                fh.write("import thisdoesntexist\n")
+            new_mods = fin.module.import_child_modules(["a", "b"])
+            self.assertEqual(mods, new_mods)
+            import_errors = []
+
+            def on_error(e):
+                import_errors.append(e)
+
+            fin.module.import_child_modules(["a", "b"], error_callback=on_error)
+            # This should be exactly 1, but py/pycs
+            self.assertTrue(len(import_errors) > 1) 
+            for error in import_errors:
+                self.assertIsInstance(error, ImportError)
+
     def test_importing_by_path(self):
         def get(rel_path, auto_add=False):
             with module_context(self.test_modules):
@@ -144,9 +165,9 @@ class ModuleTests(unittest.TestCase):
         ab = get("a/b/ab.py")
         self.assertEqual(ab.ME, "ab.py")
         with self.assertRaises(ImportError):
-             get("n/n/a/nna.py")
+            get("n/n/a/nna.py")
         with self.assertRaises(ImportError):
-             get("n/n/a/nothing.py")
+            get("n/n/a/nothing.py")
         self.assertEqual(get("n/n/a/nna.py", auto_add=True).ME, "nna.py")
 
     def test_qualified_object(self):
