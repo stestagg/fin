@@ -63,19 +63,20 @@ class ConfigSource(object):
 
 class EnvironSource(ConfigSource):
 
-    def __init__(self, prefix):
+    def __init__(self, prefix, sep="."):
         self.prefix = prefix
+        self._sep = sep
 
     def _convert_keys(self, keys):
-        return ("_".join((self.prefix, ) + keys)).upper()
+        return (self._sep.join((self.prefix, ) + keys)).upper()
 
     def get_value(self, *keys):
         return os.environ.get(self._convert_keys(keys), NOT_SET)
 
     def get_keys(self, *parents):
-        prefix = self._convert_keys(parents) + "_"
+        prefix = self._convert_keys(parents) + self._sep
         prefix_len = len(prefix)
-        return frozenset(k[prefix_len:].split("_", 1)[0].lower()
+        return frozenset(k[prefix_len:].split(self._sep, 1)[0].lower()
                          for k in os.environ.keys() if k.startswith(prefix))
 
 
@@ -210,6 +211,6 @@ class Config(MultiSource, TypedConfig):
                                   os.path.expanduser("~/.config"))
         user_config_path = os.path.join(xdg_path, config_name)
         system_config_path = os.path.join("/etc/%s" % config_name)
-        return (EnvironSource(self.name),
+        return (EnvironSource(self.name, sep="_"),
                 ConfigParserSource(user_config_path),
                 ConfigParserSource(system_config_path))

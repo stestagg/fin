@@ -23,13 +23,13 @@ class EnvironSourceTest(fin.testing.TestCase):
     def test_getting_simple(self):
         os.environ["FOO_BAR"] = "a"
         os.environ["FOOBAR"] = "b"
-        source = fin.config.EnvironSource("FOO")
+        source = fin.config.EnvironSource("FOO", sep="_")
         self.assertEqual(source.get_value("BaR"), "a")
         self.assertEqual(source.get_value("notthere"), fin.config.NOT_SET)
 
     def test_getting_nested(self):
-        os.environ["FOO_BAR"] = "a"
-        os.environ["FOO_BAR_BAZ"] = "b"
+        os.environ["FOO.BAR"] = "a"
+        os.environ["FOO.BAR.BAZ"] = "b"
         source = fin.config.EnvironSource("FOO")
         self.assertEqual(source.get_value("BAR"), "a")
         self.assertEqual(source.get_value("BAR", "baz"), "b")
@@ -38,7 +38,7 @@ class EnvironSourceTest(fin.testing.TestCase):
         os.environ["FOO_BAR"] = "a"
         os.environ["FOO_BAR_BAZ"] = "b"
         os.environ["FOO_BAR_BOB"] = "c"
-        source = fin.config.EnvironSource("FOO")
+        source = fin.config.EnvironSource("FOO", sep="_")
         self.assertItemsEqual(source.get_keys(), ["bar"])
         self.assertItemsEqual(source.get_keys("BaR"), ["baz", "bob"])
 
