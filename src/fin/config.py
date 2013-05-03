@@ -101,7 +101,7 @@ class ConfigParserSource(ConfigSource):
         options = self._parser.options(section)
         prefix_len = len(prefix)
         # config parser by default lower-cases options for us
-        return set([o[prefix_len:] for o in options if o.startswith(prefix)])
+        return set([o[prefix_len:] for o in options if o.lower().startswith(prefix)])
 
     def get_value(self, *keys):
         key = ".".join(keys).lower()
@@ -136,11 +136,15 @@ class DictSource(ConfigSource):
     def _find(self, keys):
         current = self.data
         for key in keys:
+            key = key.lower()
             if not isinstance(current, dict):
                 return NOT_SET
-            if key not in current:
+            for option in current.keys():
+                if option.lower() == key:
+                    break
+            else:
                 return NOT_SET
-            current = current[key]
+            current = current[option]
         return current
 
     def get_value(self, *keys):
@@ -152,7 +156,7 @@ class DictSource(ConfigSource):
     def get_keys(self, *parents):
         base = self._find(parents)
         if isinstance(base, dict):
-            return frozenset(base.keys())
+            return frozenset(k.lower() for k in base.keys())
         return frozenset()
 
 

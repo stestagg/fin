@@ -130,7 +130,7 @@ class MultiSourceTest(fin.testing.TestCase):
 class JsonTest(fin.testing.TestCase):
 
     def setUp(self):
-        self.raw = """{"a": 1, "b": {"a": 2}}"""
+        self.raw = """{"A": 1, "b": {"a": 2}}"""
         self.config = fin.config.JSONSource("", data=self.raw)
         try:
             self.config.json
