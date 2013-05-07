@@ -354,5 +354,28 @@ class FactorialTest(fin.testing.TestCase):
             self.factorial(i)
 
 
+class TestInvalidation(fin.testing.TestCase):
+
+    def test_invalidating(self):
+        counter = itertools.count()
+
+        class Foo(object):
+
+            @fin.cache.property
+            def a_number(self):
+                return counter.next()
+
+            @fin.cache.invalidates(a_number)
+            def next(self):
+                pass
+
+        ob = Foo()
+        self.assertEqual(ob.a_number, 0)
+        self.assertEqual(ob.a_number, 0)
+        ob.next()
+        self.assertEqual(ob.a_number, 1)
+        self.assertEqual(ob.a_number, 1)
+
+
 if __name__ == "__main__":
     fin.testing.main()

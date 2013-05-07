@@ -114,6 +114,7 @@ def depends(*attributes):
 
 def _wrap_fun_with_cache(fun, cache_type):
     cache = cache_type(fun)
+
     @functools.wraps(fun)
     def wrapper(obj, *args, **kwargs):
         return cache.get_result(obj, args, kwargs)
@@ -140,7 +141,7 @@ class property(object):
         if inst is None:
             return self
         if (hasattr(inst, PROPERTY_OVERRIDE_KEY)
-            and self in getattr(inst, PROPERTY_OVERRIDE_KEY)):
+                and self in getattr(inst, PROPERTY_OVERRIDE_KEY)):
             return getattr(inst, PROPERTY_OVERRIDE_KEY)[self](inst)
         else:
             return self._method(inst)
@@ -163,3 +164,12 @@ class property(object):
 def uncached_property(fun):
     return property(fun, wrapper=lambda x: x)
     
+
+def invalidates(other):
+    def wrap(fun):
+        @functools.wraps(fun)
+        def invalidate_then_call(ob, *args, **kwargs):
+            other.reset(ob)
+            return fun(ob, *args, **kwargs)
+        return invalidate_then_call
+    return wrap
