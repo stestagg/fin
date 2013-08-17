@@ -2,8 +2,6 @@
 
 from __future__ import with_statement
 
-import cStringIO as StringIO
-
 import fin.testing as unittest
 import fin.contextlog
 
