@@ -58,7 +58,7 @@ class VtColor(Color):
     EXTRA = {
         "bold": 1,
         "reset": 0,
-        }
+    }
 
     def _get_value(self, name):
         name = name.lower()

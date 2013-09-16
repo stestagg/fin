@@ -12,10 +12,12 @@ import fin.exception
 PY_EXTENSIONS = [ext for ext, _, _ in imp.get_suffixes()]
 
 
-class PathNotImportable(fin.exception.Exception, ImportError): pass
+class PathNotImportable(fin.exception.Exception, ImportError):
+    pass
 
 
-class NoSysPathFound(fin.exception.Exception, ImportError): pass
+class NoSysPathFound(fin.exception.Exception, ImportError):
+    pass
 
 
 def dir_is_module(path):
@@ -24,7 +26,7 @@ def dir_is_module(path):
         return False
     if os.path.dirname(path) == path:
         return False
-    if not any([os.path.exists(os.path.join(path, "__init__%s" % ext)) 
+    if not any([os.path.exists(os.path.join(path, "__init__%s" % ext))
                 for ext in PY_EXTENSIONS]):
         return False
     return True
@@ -38,9 +40,9 @@ def path_to_module_parts(path, auto_add=False):
     module_path = fin.string.rtrim(path, *PY_EXTENSIONS)
     base_path = module_path
     while True:
-        base_path = os.path.dirname(base_path) # Get the parent directory
-        if base_path in sys_paths: # Can import from here?
-            break 
+        base_path = os.path.dirname(base_path)  # Get the parent directory
+        if base_path in sys_paths:  # Can import from here?
+            break
         if not dir_is_module(base_path):
             # If we go any further, then the import will fail
             # so: if auto_add, then add this path to sys.paths, and use that...
@@ -80,7 +82,10 @@ def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
         if matcher.match(child):
             continue
         child_name = fin.string.rtrim(child, *PY_EXTENSIONS)
-        if child_name == child:
+        child_path = os.path.join(parent_dir, child)
+        if child_name == child and not os.path.isdir(child_path):
+            continue
+        if child_name in modules:
             continue
         try:
             modules[child_name] = import_module_by_name_parts(

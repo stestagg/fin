@@ -151,15 +151,30 @@ class ModuleTests(unittest.TestCase):
 
             fin.module.import_child_modules(["a", "b"], error_callback=on_error)
             # This should be exactly 1, but py/pycs
-            self.assertTrue(len(import_errors) > 1) 
+            self.assertTrue(len(import_errors) > 1)
             for error in import_errors:
                 self.assertIsInstance(error, ImportError)
+
+    def test_child_modules_as_dirs(self):
+        with module_context(self.test_modules):
+            os.mkdir(os.path.join(self.test_modules, "x"))
+            open(os.path.join(self.temp_dir, "x", "__init__.py"), "wb").close()
+            with open(os.path.join(self.temp_dir, "x", "AA.py"), "wb") as fh:
+                fh.write("FOO='AA'")
+            with open(os.path.join(self.temp_dir, "x", "BB.py"), "wb") as fh:
+                fh.write("FOO='BB'")
+            os.mkdir(os.path.join(self.test_modules, "x", "y"))
+            with open(os.path.join(self.temp_dir, "x", "y", "__init__.py"), "wb") as fh:
+                fh.write("FOO='y'")
+            modules = fin.module.import_child_modules(["x"])
+            for name in ["AA", "BB", "y"]:
+                self.assertEqual(modules[name].FOO, name)
 
     def test_importing_by_path(self):
         def get(rel_path, auto_add=False):
             with module_context(self.test_modules):
                 return fin.module.import_module_by_path(
-                    os.path.join(self.test_modules, *rel_path.split("/")), 
+                    os.path.join(self.test_modules, *rel_path.split("/")),
                     auto_add=auto_add)
 
         ab = get("a/b/ab.py")
@@ -172,8 +187,7 @@ class ModuleTests(unittest.TestCase):
 
     def test_qualified_object(self):
         with module_context(self.test_modules):
-            self.assertEqual(fin.module.get_fully_qualified_object("a.b.ab.ME"), 
-                             "ab.py")
+            self.assertEqual(fin.module.get_fully_qualified_object("a.b.ab.ME"), "ab.py")
             lowercase = fin.module.get_fully_qualified_object(
                 "a.b.ab.string.lowercase")
             self.assertEqual(lowercase[0], "a")

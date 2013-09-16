@@ -114,7 +114,6 @@ class SimpleTests(fin.testing.TestCase):
         Counter.count.reset(cache)
         self.assertEqual(cache.count, 4)
 
-
     def test_depends(self):
         class Counter(object):
             def __init__(self):
@@ -329,6 +328,7 @@ class CacheTest(fin.testing.TestCase):
 
     def test_overwriting(self):
         counter = itertools.count()
+        
         def count(inst):
             return counter.next()
         a = ExampleCache(self._simple_count)
