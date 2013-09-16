@@ -99,9 +99,9 @@ def auto_color(stream=sys.stdin):
        guesswork"""
     term_name = os.environ.get("TERM", "").lower()
     if (stream.isatty()
-        and term_name in KNOWN_TERMINAL_TYPES):
+        and (term_name in KNOWN_TERMINAL_TYPES or "xterm" in term_name)):
         return VtColor()
-    return VtColor if "xterm" in term_name else NoColor()
+    return NoColor()
 
 
 C = auto_color()
