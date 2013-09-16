@@ -29,7 +29,7 @@ class Log(object):
         return self.LOGS[self.stream]
 
     def enter_message(self, suffix=""):
-        prefix = "  " * self.level
+        prefix = "| " * self.level
         return "%s%s: %s" % (prefix, self.message, suffix)
 
     def child_added(self, child):
@@ -43,13 +43,11 @@ class Log(object):
 
     def on_exit(self, failed):
         if self.has_child:
-            if failed:
-                self.stream.write(self.enter_message(self.fail_msg) + "\n")
+            self.stream.write(("| " * self.level) + "`- ")
+        if failed:
+            self.stream.write(self.fail_msg + "\n")
         else:
-            if failed:
-                self.stream.write(self.fail_msg + "\n")
-            else:
-                self.stream.write(self.ok_msg + "\n")
+            self.stream.write(self.ok_msg + "\n")
 
     def __enter__(self):
         self.level = len(self.stack)

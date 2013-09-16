@@ -89,7 +89,7 @@ class VtColor(Color):
 
 
 KNOWN_TERMINAL_TYPES = set([
-    "linux", "term", "xterm", "vt200", "xterm-color",
+    "linux", "term", "vt200"
 ])
 
 
@@ -97,10 +97,11 @@ def auto_color(stream=sys.stdin):
     """Guess an return the relevant color class for the current environment,
        Note this doesn't use termcap or anything, yet, just does basic
        guesswork"""
+    term_name = os.environ.get("TERM", "").lower()
     if (stream.isatty()
-        and os.environ.get("TERM", "").lower() in KNOWN_TERMINAL_TYPES):
+        and term_name in KNOWN_TERMINAL_TYPES):
         return VtColor()
-    return NoColor()
+    return VtColor if "xterm" in term_name else NoColor()
 
 
 C = auto_color()
