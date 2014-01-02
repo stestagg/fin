@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+import inspect
 import sys
 import os
 import contextlib
@@ -197,7 +198,7 @@ class ModuleTests(unittest.TestCase):
             sys_email = fin.module.import_module_by_name_parts("email")
         with module_context(self.test_modules):
             self.assertSequenceEqual(
-                fin.module.path_to_module_parts(sys_email.__file__), ["email"])
+                fin.module.path_to_module_parts(inspect.getfile(sys_email)), ["email"])
         with module_context(self.test_modules):
             math_mod = fin.module.import_module_by_name_parts("math")
             self.assertAlmostEqual(math_mod.pi, 3.141, places=2)

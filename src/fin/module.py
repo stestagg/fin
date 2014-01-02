@@ -1,5 +1,5 @@
-    
 import imp
+import inspect
 import os
 import os.path
 import re
@@ -76,7 +76,7 @@ def import_module_by_path(path, auto_add=False):
 def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
     matcher = re.compile(ignore)
     parent_module = import_module_by_name_parts(*parts)
-    parent_dir = os.path.dirname(parent_module.__file__)
+    parent_dir = os.path.dirname(inspect.getfile(parent_module))
     modules = {}
     for child in os.listdir(parent_dir):
         if matcher.match(child):
