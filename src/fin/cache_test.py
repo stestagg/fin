@@ -377,5 +377,44 @@ class TestInvalidation(fin.testing.TestCase):
         self.assertEqual(ob.a_number, 1)
 
 
+class TestCacheSharing(fin.testing.TestCase):
+
+    def test_sharing_caches(self):
+        counter = itertools.count()
+        class Foo(object):
+            @classmethod
+            @fin.cache.method
+            def foo(cls):
+                return counter.next()
+
+            @fin.cache.method
+            def bar(self):
+                return counter.next()
+
+        first = Foo.foo()
+        inst = Foo()
+        second = inst.bar()
+        third = Foo().bar()
+        fourth = inst.bar()
+        self.assertEqual(first, 0)
+        self.assertEqual(second, 1)
+        self.assertEqual(third, 2)
+        self.assertEqual(fourth, 1)
+
+    def test_subclasses_are_independant(self):
+        class A(object):
+            VAL = 1
+            @classmethod
+            @fin.cache.method
+            def foo(cls):
+                return cls.VAL
+
+        class B(A):
+            VAL = 2
+
+        self.assertEqual(A.foo(), 1)
+        self.assertEqual(B.foo(), 2)
+
+
 if __name__ == "__main__":
     fin.testing.main()

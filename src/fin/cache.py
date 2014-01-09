@@ -9,13 +9,17 @@ PROPERTY_OVERRIDE_KEY = "__PROPERTY_CACHE"
 DEPENDANCIES = object()
 
 
+def _hasattr(obj, key):
+    return key in obj.__dict__
+
+
 class ResultCache(object):
 
     def __init__(self, fun):
         self._fun = fun
 
     def get_cache(self, obj):
-        if not hasattr(obj, CACHE_KEY):
+        if not _hasattr(obj, CACHE_KEY):
             setattr(obj, CACHE_KEY, {})
         cache = getattr(obj, CACHE_KEY)
         if self._fun not in cache:
@@ -27,7 +31,7 @@ class ResultCache(object):
             del getattr(obj, CACHE_KEY)[self._fun]
 
     def has_cached(self, obj):
-        return hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY)
+        return _hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY)
 
     def _run(self, obj, args, kwargs):
         return self._fun(obj, *args, **kwargs)
@@ -140,7 +144,7 @@ class property(object):
     def __get__(self, inst, cls):
         if inst is None:
             return self
-        if (hasattr(inst, PROPERTY_OVERRIDE_KEY)
+        if (_hasattr(inst, PROPERTY_OVERRIDE_KEY)
                 and self in getattr(inst, PROPERTY_OVERRIDE_KEY)):
             return getattr(inst, PROPERTY_OVERRIDE_KEY)[self](inst)
         else:
@@ -150,7 +154,7 @@ class property(object):
         if obj is None:
             return self._method.reset(inst)
         assert callable(obj)
-        if not hasattr(inst, PROPERTY_OVERRIDE_KEY):
+        if not _hasattr(inst, PROPERTY_OVERRIDE_KEY):
             setattr(inst, PROPERTY_OVERRIDE_KEY, {})
         getattr(inst, PROPERTY_OVERRIDE_KEY)[self] = obj
 
