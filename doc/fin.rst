@@ -1,6 +1,14 @@
 fin Package
 ===========
 
+:mod:`fin` Package
+------------------
+
+.. automodule:: fin.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`cache` Module
 -------------------
 
@@ -61,6 +69,14 @@ fin Package
 -----------------------------
 
 .. automodule:: fin.contextlog_test
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`doc` Module
+-----------------
+
+.. automodule:: fin.doc
     :members:
     :undoc-members:
     :show-inheritance:

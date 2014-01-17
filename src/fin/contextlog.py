@@ -10,16 +10,16 @@ class Log(object):
 
     """A logging context manager"""
     LOGS = collections.defaultdict(list)
-    
-    def __init__(self, message, 
+
+    def __init__(self, message,
                  ok_msg=None,
-                 fail_msg=None, 
+                 fail_msg=None,
                  stream=sys.stdout):
         self.message = message
         self.stream = stream
         color = fin.color.auto_color(stream)
         self.ok_msg = color.green.bold("OK") if ok_msg is None else ok_msg
-        self.fail_msg = (color.red.bold("FAIL") if fail_msg is None 
+        self.fail_msg = (color.red.bold("FAIL") if fail_msg is None
                          else fail_msg)
         self.has_child = False
         self.level = None

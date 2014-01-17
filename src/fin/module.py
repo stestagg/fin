@@ -4,6 +4,7 @@ import os
 import os.path
 import re
 import sys
+import types
 
 import fin.string
 import fin.exception
@@ -74,12 +75,16 @@ def import_module_by_path(path, auto_add=False):
 
 
 def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
-    matcher = re.compile(ignore)
-    parent_module = import_module_by_name_parts(*parts)
+    matcher = None if ignore is None else re.compile(ignore)
+    if isinstance(parts, types.ModuleType):
+        parent_module = parts
+        parts = path_to_module_parts(inspect.getfile(parts))
+    else:
+        parent_module = import_module_by_name_parts(*parts)
     parent_dir = os.path.dirname(inspect.getfile(parent_module))
     modules = {}
     for child in os.listdir(parent_dir):
-        if matcher.match(child):
+        if matcher is not None and matcher.match(child):
             continue
         child_name = fin.string.rtrim(child, *PY_EXTENSIONS)
         child_path = os.path.join(parent_dir, child)

@@ -46,6 +46,12 @@ class ConfigSource(object):
             raise KeyError(keys)
         return rv
 
+    def __iter__(self):
+        return iter(self.get_keys())
+
+    def __len__(self):
+        return len(self.get_keys())
+
     def get(self, keys, default=None):
         if isinstance(keys, basestring):
             keys = keys.split(".")

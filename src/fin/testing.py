@@ -5,11 +5,13 @@ try:
 except ImportError:
     import unittest
 
+import fin.exception
+
 
 NO_ITEMS = []
 
 
-class TeardownErrors(Exception):
+class TeardownErrors(fin.exception.Exception):
     pass
 
 

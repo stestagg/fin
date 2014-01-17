@@ -3,9 +3,8 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.join(
-    os.path.realpath(os.path.dirname(__file__)),
-    "src"))
+BASE_DIR = os.path.join(os.path.realpath(os.path.dirname(__file__)), "src")
+
 
 def usage():
     print "Usage: ./local path/to/python/file [arg] [arg] ..."
@@ -13,5 +12,9 @@ def usage():
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(usage())
-    sys.argv = sys.argv[1:]
-    execfile(sys.argv[0])
+    python_path = sys.path
+    python_path[0] = BASE_DIR
+    os.environ["PYTHONPATH"] = ":".join(python_path)
+    os.environ["PYTHONHOME"] = "/nothere"
+    argv = [sys.executable, "-sS"] + sys.argv[1:]
+    os.execvpe(sys.executable, argv, os.environ)

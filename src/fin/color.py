@@ -6,13 +6,20 @@ import fin.string
 
 
 class Color(object):
-    """ An object for producing pretty terminal output.
-    'Dial up' the correct codes by attribute access, then generate the relevant
-    escape sequences, by co-ercing to string.  i.e.:  str(C.red.bold) will
-    return the correct sequence for outputting bold, red text.
-    Alternately, you could do:  C.red.bold("Foo") to return an object
-    that, when printed, will output a bold, red Foo, then reset the terminal
-    color state"""
+    """
+    A simple class for producing pretty terminal output.  While :class:`Color` is abstract, :class:`VtColor` provides common 
+    VT-100 (xterm) compatible output.  This is a very light, small library, and doesn't deal with curses or terminfo.
+
+    The module global ``C`` is created at import time.  If standard out appears to support color output, then this will be
+    an instance of :class:`VtColor`, otherwise, :class:`NoColor`.
+
+    Typical Usage::
+
+        c = fin.color.C
+        print c.blue + "I'm blue, da-ba-dee da-ba-dai" + c.reset
+        print c.red.bold("Color") + c.red.blue("Blind")
+        print c.green("In") + c.bg_green.black("verse") # Note assumes a white-on-black color scheme.
+    """
 
     def __init__(self, parts=()):
         self.parts = parts
@@ -94,9 +101,10 @@ KNOWN_TERMINAL_TYPES = set([
 
 
 def auto_color(stream=sys.stdin):
-    """Guess an return the relevant color class for the current environment,
-       Note this doesn't use termcap or anything, yet, just does basic
-       guesswork"""
+    """
+    Depending on environment variables, and if :attr:`stream` is a tty, return a Color object that will output
+    colored text, or one that outputs plain text.
+    """
     term_name = os.environ.get("TERM", "").lower()
     if (stream.isatty()
         and (term_name in KNOWN_TERMINAL_TYPES or "xterm" in term_name)):
