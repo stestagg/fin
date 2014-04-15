@@ -143,7 +143,9 @@ class ModuleTests(unittest.TestCase):
             self.assertEqual(mods["ab2"].ME, "ab2.py")
             with open(os.path.join(self.test_modules, "a", "b", "err.py"), "wb") as fh:
                 fh.write("import thisdoesntexist\n")
-            new_mods = fin.module.import_child_modules(["a", "b"])
+            with self.assertRaises(ImportError):
+                fin.module.import_child_modules(["a", "b"])
+            new_mods = fin.module.import_child_modules(["a", "b"], error_callback=lambda *x: None)
             self.assertEqual(mods, new_mods)
             import_errors = []
 
