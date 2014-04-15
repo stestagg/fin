@@ -98,6 +98,8 @@ def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
         except ImportError, e:
             if error_callback is not None:
                 error_callback(e)
+            else:
+                raise
     return modules
 
 
