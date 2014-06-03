@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 
 from setuptools import setup, find_packages
@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 if __name__ == "__main__":
     setup(
         name="fin",
-        version="1.7",
+        version="1.8",
         license="BSD",
 
         description="A small, useful python utility library",
