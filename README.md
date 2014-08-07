@@ -1,4 +1,4 @@
-fin Utility Library [![Build Status](https://travis-ci.org/stestagg/fin.png)](https://travis-ci.org/stestagg/fin)
+fin Utility Library [![Build Status](https://travis-ci.org/stestagg/fin.svg?branch=master)](https://travis-ci.org/stestagg/fin)
 ===================
 
 A collection of useful Python modules providing utility and testing functionality.
