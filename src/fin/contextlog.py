@@ -55,6 +55,7 @@ class Log(object):
             item.child_added(self)
         self.on_enter()
         self.stack.append(self)
+        return self
 
     def __exit__(self, exc_type, exc_value, tb):
         self.stack.remove(self)
