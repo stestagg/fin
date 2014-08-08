@@ -49,6 +49,14 @@ class Log(object):
         else:
             self.stream.write(self.ok_msg + "\n")
 
+    def output(self, msg):
+        self.child_added(None)
+        for line in msg.splitlines():
+            line = line.rstrip()
+            full = "%s+ %s\n" % ("| " * (self.level + 1), line)
+            self.stream.write(full)
+        self.stream.flush()
+
     def __enter__(self):
         self.level = len(self.stack)
         for item in self.stack:

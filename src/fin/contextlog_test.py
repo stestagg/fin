@@ -44,6 +44,24 @@ class ContextLogTests(unittest.TestCase):
                     self.assertEqual(self.lines,
                          ["Foo: ", "|  Bar: FAIL", "`- FAIL"])
 
+    def test_output(self):
+        with fin.contextlog.Log("A", stream=self) as log:
+            log.output("b")
+            log.output("c")
+            with fin.contextlog.Log("B", stream=self) as l2:
+                l2.output("d\ne")
+                with fin.contextlog.Log("C", stream=self):
+                    pass
+        self.assertEqual("\n".join(l.strip() for l in self.lines), """A:
+| + b
+| + c
+| B:
+| | + d
+| | + e
+| | C: OK
+| `- OK
+`- OK""")
+
     def test_clog(self):
         with fin.contextlog.CLog("Foo", stream=self):
             with fin.contextlog.CLog("Bar", stream=self):
