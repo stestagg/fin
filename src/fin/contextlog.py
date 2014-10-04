@@ -1,9 +1,27 @@
 # (C) Steve Stagg
+# -*- coding: utf-8 -*-
 
 import collections
 import sys
 
 import fin.color
+
+THEMES = {
+    "default": {
+        "OK": lambda C: C.green.bold("OK"),
+        "FAIL": lambda C: C.red.bold("FAIL"),
+        "CHILD_PADD": lambda C: "| ",
+        "LAST_LINE": lambda C: "`- ",
+        "OUTPUT_PREFIX": lambda C: "+",
+    },
+    "aa": {
+        "OK": lambda C: C.green.bold("OK"),
+        "FAIL": lambda C: C.red.bold("FAIL"),
+        "CHILD_PADD": lambda C: "│ ",
+        "LAST_LINE": lambda C: "└ ",
+        "OUTPUT_PREFIX": lambda C: "┝",
+    }
+}
 
 
 class Log(object):
@@ -14,22 +32,26 @@ class Log(object):
     def __init__(self, message,
                  ok_msg=None,
                  fail_msg=None,
-                 stream=sys.stdout):
+                 theme="default",
+                 stream=sys.stderr):
         self.message = message
+        self.theme = theme
         self.stream = stream
-        color = fin.color.auto_color(stream)
-        self.ok_msg = color.green.bold("OK") if ok_msg is None else ok_msg
-        self.fail_msg = (color.red.bold("FAIL") if fail_msg is None
-                         else fail_msg)
+        self.color = fin.color.auto_color(stream)
+        self.ok_msg = self._theme_item("OK") if ok_msg is None else ok_msg
+        self.fail_msg = (self._theme_item("FAIL") if fail_msg is None else fail_msg)
         self.has_child = False
         self.level = None
+
+    def _theme_item(self, item):
+        return THEMES[self.theme][item](self.color)
 
     @property
     def stack(self):
         return self.LOGS[self.stream]
 
     def enter_message(self, suffix=""):
-        prefix = "| " * self.level
+        prefix = self._theme_item("CHILD_PADD") * self.level
         return "%s%s: %s" % (prefix, self.message, suffix)
 
     def child_added(self, child):
@@ -43,7 +65,9 @@ class Log(object):
 
     def on_exit(self, failed):
         if self.has_child:
-            self.stream.write(("| " * self.level) + "`- ")
+            self.stream.write(
+                (self._theme_item("CHILD_PADD") * self.level) 
+                + self._theme_item("LAST_LINE"))
         if failed:
             self.stream.write(self.fail_msg + "\n")
         else:
@@ -53,7 +77,10 @@ class Log(object):
         self.child_added(None)
         for line in msg.splitlines():
             line = line.rstrip()
-            full = "%s+ %s\n" % ("| " * (self.level + 1), line)
+            full = "%s%s %s\n" % (
+                self._theme_item("CHILD_PADD") * (self.level + 1), 
+                self._theme_item("OUTPUT_PREFIX"), 
+                line)
             self.stream.write(full)
         self.stream.flush()
 
