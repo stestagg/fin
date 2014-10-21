@@ -55,7 +55,7 @@ class LeaveLogException(BaseException):
 
 
 def find_open_log(cls):
-    for stack in cls.LOGS.viewvalues():
+    for stack in cls.LOGS.itervalues():
         if len(stack) > 0:
             return stack[-1]
     raise ValueError("Cannot find a suitable context log to output to")
