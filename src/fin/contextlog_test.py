@@ -94,6 +94,18 @@ class ContextLogTests(unittest.TestCase):
         self.assertEqual(self.lines, ["Foo: ", "| Bar: ",
                                       "| `- FAIL", "`- FAIL"])
 
+    def test_incorrect_log_output(self):
+        with self.assertRaises(ValueError):
+            with fin.contextlog.Log("Foo", stream=self) as l:
+                l.output("Works")
+            l.output("Fails")
+        self.assertEqual(self.lines, ["Foo: ", "| + Works", "`- OK"])
+
+    def test_log_output_format(self):
+        with fin.contextlog.Log("Foo", stream=self) as l:
+            l.format({1: "2"})
+        self.assertEqual(self.lines, ["Foo: ", "| + {1: '2'}", "`- OK"])
+
 
 if __name__ == "__main__":
     unittest.main()
