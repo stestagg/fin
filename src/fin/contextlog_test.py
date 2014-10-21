@@ -106,6 +106,26 @@ class ContextLogTests(unittest.TestCase):
             l.format({1: "2"})
         self.assertEqual(self.lines, ["Foo: ", "| + {1: '2'}", "`- OK"])
 
+    def test_anonymous_output(self):
+        with fin.contextlog.Log("Foo", stream=self):
+            fin.contextlog.Log.output("Test")
+        self.assertEqual(self.lines, ['Foo: ', '| + Test', '`- OK'])
+
+    def test_anonymous_nested_output(self):
+        with fin.contextlog.Log("Foo", stream=self):
+            with fin.contextlog.Log("Bar", stream=self):
+                fin.contextlog.Log.output("Test")
+        self.assertEqual(self.lines, ['Foo: ', '| Bar: ', '| | + Test', '| `- OK', '`- OK'])
+
+    def test_anonymous_output_noleak(self):
+        with fin.contextlog.Log("Foo", stream=self):
+            with fin.contextlog.Log("Bar", stream=self):
+                fin.contextlog.Log.output("ONE")
+            fin.contextlog.Log.output("TWO")
+        self.assertEqual(self.lines, ['Foo: ', '| Bar: ', '| | + ONE', '| `- OK', '| + TWO', '`- OK'])
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import functools
 import pprint
 import sys
-import functools
 import textwrap
+import types
 
 import fin.terminal
 import fin.color
+import fin.duplex
+
 
 THEMES = {
     "default": {
@@ -49,6 +52,13 @@ class LeaveLogException(BaseException):
 
     def __init__(self, msg):
         self.exit_msg = msg
+
+
+def find_open_log(cls):
+    for stack in cls.LOGS.viewvalues():
+        if len(stack) > 0:
+            return stack[-1]
+    raise ValueError("Cannot find a suitable context log to output to")
 
 
 class Log(object):
@@ -128,7 +138,15 @@ class Log(object):
         self.on_exit(exc_type is not None, msg)
         return rv
 
+    @fin.duplex.method(inst_lookup_fun=find_open_log)
     def output(self, msg):
+        if isinstance(self, types.TypeType) and issubclass(self, Log):
+            for stack in self.LOGS.viewvalues():
+                if len(stack) > 0:
+                    self = stack[-1]
+                    break
+            else:
+                raise ValueError("Cannot find a suitable context log to output to")
         if not self.open:
             raise ValueError("Cannot log output from outside log context.")
         self.child_added(None)
@@ -143,6 +161,7 @@ class Log(object):
             self.stream.write(full)
         self.stream.flush()
 
+    @fin.duplex.method(inst_lookup_fun=find_open_log)
     def format(self, msg, **kwargs):
         if not self.open:
             raise ValueError("Cannot log output from outside log context.")
