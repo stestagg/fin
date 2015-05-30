@@ -29,11 +29,11 @@ THEMES = {
         "OUTPUT_PREFIX": lambda C: C.purple("▻"),
     },
     "mac": {
-        "OK": lambda C: C.green.bold("✓"),
-        "FAIL": lambda C: C.red.bold("✗"),
-        "CHILD_PADD": lambda C: C.purple("│ "),
-        "LAST_LINE": lambda C: C.purple("└ "),
-        "OUTPUT_PREFIX": lambda C: C.purple.bold("▻"),  
+        "OK": lambda C: C.green.bold(u"✓"),
+        "FAIL": lambda C: C.red.bold(u"✗"),
+        "CHILD_PADD": lambda C: C.purple(u"│ "),
+        "LAST_LINE": lambda C: C.purple(u"└ "),
+        "OUTPUT_PREFIX": lambda C: C.purple.bold(u"▻"),  
     }
 }
 
@@ -92,7 +92,7 @@ class Log(object):
 
     def enter_message(self, suffix=""):
         prefix = self._theme_item("CHILD_PADD") * self.level
-        return "%s%s: %s" % (prefix, self.message, suffix)
+        return u"%s%s: %s" % (prefix, self.message, suffix)
 
     def child_added(self, child):
         if not self.has_child:
@@ -101,7 +101,7 @@ class Log(object):
 
     def on_enter(self):
         self.open = True
-        self.stream.write(self.enter_message())
+        self.stream.write(self.enter_message().encode("utf-8", errors="replace"))
         self.stream.flush()
 
     def on_exit(self, failed, msg=None):
