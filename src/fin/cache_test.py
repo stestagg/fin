@@ -15,11 +15,11 @@ class SimpleTests(fin.testing.TestCase):
 
             @property
             def count(self):
-                return self.counter.next()
+                return next(self.counter)
 
             @fin.cache.property
             def dont_count(self):
-                return self.counter.next()
+                return next(self.counter)
 
         cache = Counter()
         for i in range(10):
@@ -33,7 +33,7 @@ class SimpleTests(fin.testing.TestCase):
 
             @fin.cache.property
             def count(self):
-                return self.counter.next()
+                return next(self.counter)
 
         cache1 = Counter()
         cache2 = Counter()
@@ -49,7 +49,7 @@ class SimpleTests(fin.testing.TestCase):
 
             @fin.cache.method
             def count(self, data):
-                return self.counter.next()
+                return next(self.counter)
 
         cache = Counter()
         a = {"b": {"c": []}}
@@ -82,7 +82,7 @@ class SimpleTests(fin.testing.TestCase):
 
             @fin.cache.property
             def count(self, data):
-                return self.counter.next()
+                return next(self.counter)
 
         ob = Counter.count
         assert isinstance(ob, fin.cache.property)
@@ -94,11 +94,11 @@ class SimpleTests(fin.testing.TestCase):
 
             @fin.cache.method
             def do_count(self):
-                return self.counter.next()
+                return next(self.counter)
 
             @fin.cache.property
             def count(self):
-                return self.counter.next()
+                return next(self.counter)
 
         cache = Counter()
         self.assertEqual(cache.count, 0)
@@ -140,7 +140,7 @@ class SimpleTests(fin.testing.TestCase):
 
             @fin.cache.method
             def append(self, l):
-                return l + [self.counter.next()]
+                return l + [next(self.counter)]
 
         cache = Counter()
         self.assertEqual(cache.append([1, 2]), [1, 2, 0])
@@ -187,8 +187,8 @@ class GeneratorTest(fin.testing.TestCase):
         ssitertools = SsItertools()
         a = ssitertools.count()
         b = ssitertools.count()
-        self.assertEqual(a.next(), 0)
-        self.assertEqual(b.next(), 0)
+        self.assertEqual(next(a), 0)
+        self.assertEqual(next(b), 0)
 
     def test_yield(self):
         counter = itertools.count()
@@ -199,16 +199,16 @@ class GeneratorTest(fin.testing.TestCase):
             def count(self):
                 for i in range(10):
                     yield i
-                    counter.next()
+                    next(counter)
 
         ssitertools = SsItertools()
         cached1 = ssitertools.count
         cached2 = ssitertools.count
-        self.assertEqual(counter.next(), 0)
+        self.assertEqual(next(counter), 0)
         for i, j in enumerate(cached1):
             self.assertEqual(i, j)
-            self.assertEqual(cached2.next(), j)
-        self.assertEqual(counter.next(), 11)
+            self.assertEqual(next(cached2), j)
+        self.assertEqual(next(counter), 11)
 
     def test_arguments(self):
 
@@ -228,18 +228,18 @@ class GeneratorTest(fin.testing.TestCase):
         self.assertEqual(apples.apples, 10)
         self.assertEqual(sum(apple for apple in basket), 5)
         self.assertEqual(apples.apples, 5)
-        self.assertRaises(StopIteration, basket.next)
+        self.assertRaises(StopIteration, basket.__next__)
         magic_basket = apples.gimmeh(5)
         self.assertEqual(apples.apples, 5)
         for apple in magic_basket:
-            self.assertRaises(StopIteration, basket.next)
+            self.assertRaises(StopIteration, basket.__next__)
         self.assertEqual(apples.apples, 5)
-        self.assertRaises(StopIteration, magic_basket.next)
+        self.assertRaises(StopIteration, magic_basket.__next__)
         small_basket = apples.gimmeh(4)
         self.assertEqual(apples.apples, 5)
         self.assertEqual(sum(apple for apple in small_basket), 4)
         self.assertEqual(apples.apples, 1)
-        self.assertRaises(StopIteration, small_basket.next)
+        self.assertRaises(StopIteration, small_basket.__next__)
 
 
 class ExampleCache(object):
@@ -330,7 +330,7 @@ class CacheTest(fin.testing.TestCase):
         counter = itertools.count()
         
         def count(inst):
-            return counter.next()
+            return next(counter)
         a = ExampleCache(self._simple_count)
         a.hydrogen = fin.cache.method(fin.cache.depends("epoch")(count))
         self.assertEqual(a.hydrogen, 0)
@@ -363,7 +363,7 @@ class TestInvalidation(fin.testing.TestCase):
 
             @fin.cache.property
             def a_number(self):
-                return counter.next()
+                return next(counter)
 
             @fin.cache.invalidates(a_number)
             def next(self):
@@ -385,11 +385,11 @@ class TestCacheSharing(fin.testing.TestCase):
             @classmethod
             @fin.cache.method
             def foo(cls):
-                return counter.next()
+                return next(counter)
 
             @fin.cache.method
             def bar(self):
-                return counter.next()
+                return next(counter)
 
         first = Foo.foo()
         inst = Foo()

@@ -102,17 +102,19 @@ class DynamicTee(object):
             self.tee = dynamic_tee
             self.index = 0
 
-        def next(self):
+        def __next__(self):
             val = self.tee[self.index]
             self.index += 1
             return val
+
+        next = __next__
 
         def __iter__(self):
             return self
 
     def __init__(self, generator):
         self._stopped = False
-        if not hasattr(generator, "next"):
+        if not hasattr(generator, "__next__"):
             self._generator = iter(generator)
         else:
             self._generator = generator
@@ -123,7 +125,7 @@ class DynamicTee(object):
 
     def __getitem__(self, index):
         if index == len(self._generated):
-            self._generated.append(self._generator.next())
+            self._generated.append(next(self._generator))
         return self._generated[index]
 
 

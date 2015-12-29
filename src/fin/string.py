@@ -1,4 +1,9 @@
 
+try:
+   basestring
+except NameError:
+   basestring = str
+   unicode = str
 
 def substring(data, offset=None, size=None):
     """This function matches the buffer() behaviour, for certain applications

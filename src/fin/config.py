@@ -1,7 +1,10 @@
 
 from __future__ import with_statement
 
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import os
 
 try:
@@ -10,6 +13,12 @@ except ImportError:
     pass
 
 import fin.cache
+
+try:
+    STR_BASE = basestring
+except NameError:
+    STR_BASE = str
+
 
 
 NOT_SET = object()
@@ -39,8 +48,10 @@ class TypedConfig(object):
 class ConfigSource(object):
 
     def __getitem__(self, keys):
-        if isinstance(keys, basestring):
-            keys = keys.split(".")
+        if isinstance(keys, bytes):
+            keys = keys.decode('utf-8')
+        if isinstance(keys, STR_BASE):
+            keys = keys.lower().split(".")
         rv = self.get_value(*keys)
         if rv is NOT_SET:
             raise KeyError(keys)
@@ -53,7 +64,7 @@ class ConfigSource(object):
         return len(self.get_keys())
 
     def get(self, keys, default=None):
-        if isinstance(keys, basestring):
+        if isinstance(keys, STR_BASE):
             keys = keys.split(".")
         rv = self.get_value(*keys)
         return default if rv is NOT_SET else rv
@@ -94,7 +105,7 @@ class ConfigParserSource(ConfigSource):
     @fin.cache.property
     @fin.cache.depends("filename")
     def _parser(self):
-        parser = ConfigParser.RawConfigParser()
+        parser = configparser.RawConfigParser()
         parser.read(self.filename)
         return parser
 

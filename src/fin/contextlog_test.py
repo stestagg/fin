@@ -12,6 +12,8 @@ class ContextLogTests(unittest.TestCase):
         self.data = []
 
     def write(self, msg):
+        if hasattr(msg, "decode"):
+            msg = msg.decode("utf-8")
         self.data.append(msg)
 
     def isatty(self):

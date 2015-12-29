@@ -1,4 +1,19 @@
+
+
 import sys
+import os
+
+def fix_sys_path():
+    this_dir = os.path.abspath(os.path.dirname(__file__)).rstrip(os.pathsep)
+    first_sys_path = os.path.abspath(sys.path[0]).rstrip(os.pathsep)
+
+    if first_sys_path == this_dir:
+        sys.path = sys.path[1:]
+
+fix_sys_path()
+
+import string
+
 
 try:
     import unittest2 as unittest
@@ -38,7 +53,7 @@ class TestCase(unittest.TestCase):
             manager = managers.pop()
             try:
                 manager.__exit__(exc_type, exc, tb)
-            except Exception, e:
+            except Exception as e:
                 teardown_errors.append(e)
         if teardown_errors:
             raise TeardownErrors(teardown_errors)
@@ -48,6 +63,12 @@ class TestCase(unittest.TestCase):
             return super(TestCase, self).run(*args, **kwargs)
         finally:
             self._exit()
+
+    if not hasattr(unittest.TestCase, "assertRaisesRegex"):
+        assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+
+    if not hasattr(unittest.TestCase, "assertCountEqual"):
+        assertCountEqual = unittest.TestCase.assertItemsEqual    
 
 
 def main(*args, **kwargs):

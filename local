@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python
 
 import os
 import sys
@@ -7,7 +7,7 @@ BASE_DIR = os.path.join(os.path.realpath(os.path.dirname(__file__)), "src")
 
 
 def usage():
-    print "Usage: ./local path/to/python/file [arg] [arg] ..."
+    print("Usage: ./local path/to/python/file [arg] [arg] ...")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

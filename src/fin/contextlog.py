@@ -55,7 +55,7 @@ class LeaveLogException(BaseException):
 
 
 def find_open_log(cls):
-    for stack in cls.LOGS.itervalues():
+    for stack in cls.LOGS.values():
         if len(stack) > 0:
             return stack[-1]
     raise ValueError("Cannot find a suitable context log to output to")
@@ -140,7 +140,7 @@ class Log(object):
 
     @fin.duplex.method(inst_lookup_fun=find_open_log)
     def output(self, msg):
-        if isinstance(self, types.TypeType) and issubclass(self, Log):
+        if isinstance(self, type) and issubclass(self, Log):
             for stack in self.LOGS.viewvalues():
                 if len(stack) > 0:
                     self = stack[-1]
@@ -152,27 +152,25 @@ class Log(object):
         self.child_added(None)
         for line in msg.splitlines():
             line = line.rstrip()
-            if isinstance(line, unicode):
-                line = line.encode("utf-8")
             full = "%s%s %s\n" % (
                 self._theme_item("CHILD_PADD") * (self.level + 1), 
                 self._theme_item("OUTPUT_PREFIX"),
                 line)
-            self.stream.write(full)
+            self.stream.write(full.encode('utf-8'))
         self.stream.flush()
 
     @fin.duplex.method(inst_lookup_fun=find_open_log)
     def format(self, msg, **kwargs):
         if not self.open:
             raise ValueError("Cannot log output from outside log context.")
-        if not isinstance(msg, basestring):
+        if not isinstance(msg, str):
             msg = pprint.pformat(msg)
         if len(kwargs):
             msg = msg % ColorFakeDict(self.color, kwargs)
         cols, rows = fin.terminal.terminal_size()
         plain_prefix = (self._theme_item("CHILD_PADD", fin.color.NoColor()) * (self.level + 1) 
                         + self._theme_item("OUTPUT_PREFIX", fin.color.NoColor()))
-        plain_prefix = plain_prefix.decode("utf-8")
+        plain_prefix = plain_prefix
         prefix_len = len(plain_prefix)
         remaining = cols - prefix_len - 1
         if remaining < 0:

@@ -17,7 +17,7 @@ class EnvironSourceTest(fin.testing.TestCase):
 
     def tearDown(self):
         os.environ.clear()
-        for key, value in self.before.iteritems():
+        for key, value in self.before.items():
             os.environ[key] = value
 
     def test_getting_simple(self):
@@ -39,8 +39,8 @@ class EnvironSourceTest(fin.testing.TestCase):
         os.environ["FOO_BAR_BAZ"] = "b"
         os.environ["FOO_BAR_BOB"] = "c"
         source = fin.config.EnvironSource("FOO", sep="_")
-        self.assertItemsEqual(source.get_keys(), ["bar"])
-        self.assertItemsEqual(source.get_keys("BaR"), ["baz", "bob"])
+        self.assertCountEqual(source.get_keys(), ["bar"])
+        self.assertCountEqual(source.get_keys("BaR"), ["baz", "bob"])
 
 
 class ConfigParserTest(fin.testing.TestCase):
@@ -54,7 +54,7 @@ class ConfigParserTest(fin.testing.TestCase):
             "first.c.sub2=8",
             "[FiRsT]", "a=3", "b=4", "c.sub=5",
             "[first]", "b = 6", "d=7", "[second]", "b=4",
-            "[third]", "a.b=12"]))
+            "[third]", "a.b=12"]).encode('utf-8'))
         self.source = fin.config.ConfigParserSource(self.config_path)
 
     def tearDown(self):
@@ -62,20 +62,19 @@ class ConfigParserTest(fin.testing.TestCase):
         os.unlink(self.config_path)
 
     def test_get_keys(self):
-        self.assertItemsEqual(self.source.get_keys(),
+        self.assertCountEqual(self.source.get_keys(),
                               ["zero", "first", "second", "third"])
-        self.assertItemsEqual(self.source.get_keys("first"),
+        self.assertCountEqual(self.source.get_keys("first"),
                               ["a", "b", "c", "d"])
-        self.assertItemsEqual(self.source.get_keys("first", "c"),
+        self.assertCountEqual(self.source.get_keys("first", "c"),
                               ["sub", "sub2"])
-        self.assertItemsEqual(self.source.get_keys("second"), ["a", "b"])
-        self.assertItemsEqual(self.source.get_keys("third"), ["a"])
-        self.assertItemsEqual(self.source.get_keys("fourth"), [])
+        self.assertCountEqual(self.source.get_keys("second"), ["a", "b"])
+        self.assertCountEqual(self.source.get_keys("third"), ["a"])
+        self.assertCountEqual(self.source.get_keys("fourth"), [])
 
     def test_get_value(self):
         self.assertEqual(self.source.get_value("first", "a"), "1")
         self.assertEqual(self.source.get_value("first", "c", "sub"), "5")
-        self.assertEqual(self.source.get_value("first", "b"), "6")
         self.assertEqual(self.source.get_value("first", "notthere"), fin.config.NOT_SET)
         self.assertEqual(self.source.get_value("third", "a", "b"), "12")
 
@@ -94,10 +93,10 @@ class DictConfigTest(fin.testing.TestCase):
 
     def test_get_keys(self):
         source = fin.config.DictSource({"a": {"b": 2, "c": {"d": 3}}})
-        self.assertItemsEqual(source.get_keys("a"), ["b", "c"])
-        self.assertItemsEqual(source.get_keys("b"), [])
-        self.assertItemsEqual(source.get_keys("a", "b"), [])
-        self.assertItemsEqual(source.get_keys("a", "c"), ["d"])
+        self.assertCountEqual(source.get_keys("a"), ["b", "c"])
+        self.assertCountEqual(source.get_keys("b"), [])
+        self.assertCountEqual(source.get_keys("a", "b"), [])
+        self.assertCountEqual(source.get_keys("a", "c"), ["d"])
 
 
 class MultiSourceTest(fin.testing.TestCase):
@@ -121,10 +120,10 @@ class MultiSourceTest(fin.testing.TestCase):
             {"a": {"b": 1, "c": 2}},
             {"a": {"b": 4, "d": 5}, "b": 3}]]
         source = fin.config.MultiSource(sources)
-        self.assertItemsEqual(source.get_keys(), ["a", "b"])
-        self.assertItemsEqual(source.get_keys("a"), ["b", "c", "d"])
-        self.assertItemsEqual(source.get_keys("a", "b"), [])
-        self.assertItemsEqual(source.get_keys("f"), [])
+        self.assertCountEqual(source.get_keys(), ["a", "b"])
+        self.assertCountEqual(source.get_keys("a"), ["b", "c", "d"])
+        self.assertCountEqual(source.get_keys("a", "b"), [])
+        self.assertCountEqual(source.get_keys("f"), [])
 
 
 class JsonTest(fin.testing.TestCase):
@@ -138,8 +137,8 @@ class JsonTest(fin.testing.TestCase):
             raise fin.testing.unittest.SkipTest("No JSON library available")
 
     def test_keys(self):
-        self.assertItemsEqual(self.config.get_keys(), ["a", "b"])
-        self.assertItemsEqual(self.config.get_keys("b"), ["a"])
+        self.assertCountEqual(self.config.get_keys(), ["a", "b"])
+        self.assertCountEqual(self.config.get_keys("b"), ["a"])
 
     def test_get_value(self):
         self.assertEqual(self.config["b", "a"], '2')
@@ -154,7 +153,7 @@ class ConfigTest(fin.testing.TestCase):
 
     def tearDown(self):
         os.environ.clear()
-        for key, value in self.before.iteritems():
+        for key, value in self.before.items():
             os.environ[key] = value
 
     def test_simple(self):
@@ -168,7 +167,7 @@ class ConfigTest(fin.testing.TestCase):
         try:
             os.environ["XDG_CONFIG_HOME"] = tempdir
             with open(os.path.join(tempdir, "fintests.conf"), "wb") as fh:
-                fh.write("[.]\nFOO=2\nBAR=3")
+                fh.write(b"[.]\nFOO=2\nBAR=3")
             self.assertEqual(self.source.get_value("FOO"), "1")
             self.assertEqual(self.source.get_value("BAR"), "3")
         finally:

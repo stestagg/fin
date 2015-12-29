@@ -13,7 +13,7 @@ def ioctl_GWINSZ(fd):
         return None
     try:
         cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
-    except Exception, e:
+    except Exception:
         return None
     return cr
 

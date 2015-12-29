@@ -1,7 +1,7 @@
 import contextlib
+import fin.testing
 import unittest
 
-import fin.testing
 
 
 def test_cm():
@@ -12,7 +12,7 @@ def test_cm():
         results.append("before")
         try:
             yield
-        except Exception, e:
+        except Exception as e:
             results.append(e)
         else:
             results.append("after")

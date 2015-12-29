@@ -95,7 +95,7 @@ def import_child_modules(parts, ignore="^[\._].*", error_callback=None):
         try:
             modules[child_name] = import_module_by_name_parts(
                 *(tuple(parts) + (child_name, )))
-        except Exception, e:
+        except Exception as e:
             if error_callback is not None:
                 error_callback(e)
             else:
