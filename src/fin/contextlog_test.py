@@ -1,6 +1,7 @@
 # (C) Steve Stagg
 
-from __future__ import with_statement
+import io
+import functools
 
 import fin.testing as unittest
 import fin.contextlog
@@ -126,7 +127,35 @@ class ContextLogTests(unittest.TestCase):
             fin.contextlog.Log.output("TWO")
         self.assertEqual(self.lines, ['Foo: ', '| Bar: ', '| | + ONE', '| `- OK', '| + TWO', '`- OK'])
 
+    def test_outputting_to_text_buffer(self):
+        stream = io.StringIO()
+        bytes_as_str = str(b'hi')
+        with fin.contextlog.Log("Foo", stream=stream) as l:
+            l.format(b'hi')
+            l.output('ho')
+        self.assertEqual(stream.getvalue(), "Foo: \n| + %s\n| + ho\n`- OK\n" % bytes_as_str)
 
+    def test_outputting_to_bytes_buffer(self):
+        stream = io.BytesIO()
+        bytes_as_str = str(b'hi')
+        with fin.contextlog.Log("Foo", stream=stream) as l:
+            l.format(b'hi')
+            l.output('ho')
+        self.assertEqual(stream.getvalue().decode('utf-8'), u"Foo: \n| + %s\n| + ho\n`- OK\n" % bytes_as_str)
+
+    def test_outputting_as_string_and_bytes(self):
+        for stream_type in [io.StringIO, io.BytesIO]:
+            stream = stream_type()
+            Log = functools.partial(fin.contextlog.Log, stream=stream)
+            with Log("One"):
+                with Log("Two") as l:
+                    l.output('Three')
+                    l.format({'a': b'a', 1: 2.1})
+                try:
+                    with Log("Fail"):
+                        raise IndexError()
+                except IndexError:
+                    pass
 
 
 if __name__ == "__main__":

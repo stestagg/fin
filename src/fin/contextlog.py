@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
+import io
 import functools
 import pprint
 import sys
@@ -98,6 +99,16 @@ class Log(object):
         self.theme = theme
         self.open = False
         self.stream = stream
+        if isinstance(self.stream, io.TextIOBase):
+            try:
+                unicode
+            except NameError:
+                self.stream_encoder = lambda x: x
+            else:
+                self.stream_encoder = lambda x: unicode(x)
+        else:
+            self.stream_encoder = lambda x: x.encode('utf-8', errors='replace')
+
         self.color = fin.color.auto_color(stream)
         self.ok_msg = self._theme_item("OK") if ok_msg is None else ok_msg
         self.fail_msg = (self._theme_item("FAIL") if fail_msg is None else fail_msg)
@@ -117,27 +128,30 @@ class Log(object):
         prefix = self._theme_item("CHILD_PADD") * self.level
         return u"%s%s: %s" % (prefix, self.message, suffix)
 
+    def _write(self, data):
+        self.stream.write(self.stream_encoder(data))
+
     def child_added(self, child):
         if not self.has_child:
-            self.stream.write("\n")
+            self._write("\n")
         self.has_child = True
 
     def on_enter(self):
         self.open = True
-        self.stream.write(self.enter_message().encode("utf-8", errors="replace"))
+        self._write(self.enter_message())
         self.stream.flush()
 
     def on_exit(self, failed, msg=None):
         if self.has_child:
             line = (self._theme_item("CHILD_PADD") * self.level
                     + self._theme_item("LAST_LINE"))
-            self.stream.write(line)
+            self._write(line)
         if msg is not None:
-            self.stream.write(msg+ "\n")
+            self._write(msg+ "\n")
         elif failed:
-            self.stream.write(self.fail_msg + "\n")
+            self._write(self.fail_msg + "\n")
         else:
-            self.stream.write(self.ok_msg + "\n")
+            self._write(self.ok_msg + "\n")
         self.open = False
 
     def exit(self, msg):
@@ -185,7 +199,7 @@ class Log(object):
                 self._theme_item("CHILD_PADD") * (self.level + 1), 
                 self._theme_item("OUTPUT_PREFIX"),
                 line)
-            self.stream.write(full.encode('utf-8'))
+            self._write(full)
         self.stream.flush()
 
     @fin.duplex.method(inst_lookup_fun=find_open_log)
@@ -232,7 +246,7 @@ class CLog(Log):
     def child_added(self, child):
         if self.has_child or isinstance(child, CLog):
             return
-        self.stream.write(self.enter_message("\n"))
+        self._write(self.enter_message("\n"))
         self.has_child = True
 
     def on_exit(self, failed, msg=None):
