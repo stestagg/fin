@@ -1,0 +1,20 @@
+#!/usr/bin/python2.7
+
+import os
+import sys
+
+BASE_DIR = os.path.join(os.path.realpath(os.path.dirname(__file__)), "src")
+
+
+def usage():
+    print("Usage: ./local path/to/python/file [arg] [arg] ...")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        sys.exit(usage())
+    python_path = sys.path
+    python_path[0] = BASE_DIR
+    os.environ["PYTHONPATH"] = ":".join(python_path)
+    os.environ["PYTHONHOME"] = "/nothere"
+    argv = [sys.executable, "-sS"] + sys.argv[1:]
+    os.execvpe(sys.executable, argv, os.environ)

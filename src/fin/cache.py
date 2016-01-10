@@ -131,21 +131,37 @@ class DynamicTee(object):
 
 def depends(*attributes):
     """
-    Used in conjunction with ``@fin.cache.property`` or ``@fin.cache.method``, this decorator tags a cached method as depending
-    on the specified named attribute on the method's object.  This can be useful to 
+    Used in conjunction with :func:`fin.cache.property` or :func:`fin.cache.method`, this decorator tags a cached method as depending
+    on the value of the specified named attribute on the method's object.  Note, this does mean all dependant properties are evaluated
+    every time the cached method is called.
 
     As a naive example, to cache an object hash, where the hashing algorithm might change::
 
-        class HashedValue(object):
+        >>> class HashedValue(object):
+        
+        >>>    def __init__(self, value):
+        >>>        self.value = value
+        >>>        self.hash_method = "sha1"
 
-            def __init__(self, value):
-                self.value = value
-                self.hash_method = "sha1"
+        >>>    @fin.cache.property
+        >>>    @fin.cache.depends("value", "hash_method")
+        >>>    def hash(self):
+        >>>        print('** Calculating **')
+        >>>        return getattr(hashlib, self.hash_method)(self.value).hexdigest()
 
-            @fin.cache.property
-            @fin.cache.depends("value", "hash_method")
-            def hash(self):
-                return getattr(hashlib, self.hash_method)(self.value).hexdigest()
+        >>> val = HashedValue('hello')
+        >>> val.hash
+        ** Calculating **
+        'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'
+        >>> val.hash
+        'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'
+        >>> val.hash_method = 'sha1'
+        >>> val.hash
+        'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'
+        >>> val.hash_method = 'sha512'
+        >>> val.hash
+        ** Calculating **
+        '9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043'
 
     In this case, ``instance.hash`` will always reflect the currently selected hashing method, and the current value, but will not re-hash the 
     value needlessly.
@@ -169,11 +185,12 @@ def _wrap_fun_with_cache(fun, cache_type):
 
 def method(fun):
     """
-    This is the core of ``fin.cache``.  Typically used as a decorator on class or instance methods.  When a method is decorated with this
-    function, repeatedly calling it, on the same object, with the same arguments*, will only cause the method to be called once.
+    This is the core of ``fin.cache``.  Typically used as a decorator on class or instance methods.  
+    When a method is decorated with this function, repeatedly calling it, on the same object, 
+    with the same arguments*, will only cause the method to be called once.
     The result of that call is stored on the object, and is automatically returned subsequently. 
 
-    An interesting example from the tests::
+    An interesting (contrived) example from the tests::
 
         class Factorial(object):
 
@@ -188,26 +205,29 @@ def method(fun):
         for i in range(2000):
             factorial.factorial(i)
 
-    * **NOTE**: Arguments are tested by equality (``a==b`` not ``a is b``).  This can, in a very few situations, lead to unexpected results.
+    \* **NOTE**: Arguments are tested by equality (``a==b`` not ``a is b``).  This can, in a very few situations, lead to unexpected results.
       Also, the result value is cached by reference.  If a cached method returns, for example, a ``list``, then any modifications to that list will 
       be shared amongst all return values, which can lead to some strange effects if mis-used::
 
-        class Bad(object):
+        >>> class Bad(object):
 
-            @classmethod
-            @fin.cache.method
-            def bad_range(self, n):
-                return list(range(n))
+        >>>     @classmethod
+        >>>     @fin.cache.method
+        >>>     def bad_range(self, n):
+        >>>         return list(range(n))
 
-        nums = Bad.bad_range(1)
-        print Bad.bad_range(1), Bad.bad_range(2)  # [0] [0, 1]
-        nums.extend(Bad.bad_range(2))
-        print Bad.bad_range(1), Bad.bad_range(2)  # [0, 0, 1] [0, 1]
+        >>> nums = Bad.bad_range(1)
+        >>> print(Bad.bad_range(1), Bad.bad_range(2))
+        [0] [0, 1]
+        >>> nums.extend(Bad.bad_range(2))
+        >>> print(Bad.bad_range(1), Bad.bad_range(2))
+        [0, 0, 1] [0, 1]
 
-    Calling 'reset(object)' on the descriptor will cause the cache to be cleared for that object, to continue the example::
+    Calling ``reset(object)`` on the descriptor will cause the cache to be cleared for that object, to continue the example::
 
-        Bad.bad_range.reset(Bad)
-        print Bad.bad_range(1), Bad.bad_range(2)  # [0] [0, 1]
+        >>> Bad.bad_range.reset(Bad)
+        >>> print(Bad.bad_range(1), Bad.bad_range(2))
+        [0] [0, 1]
 
     When used on an instance method, rather than a classmethod, the object instance should be passed into reset.
     """
@@ -223,22 +243,38 @@ def generator(fun):
     Acts like ``@fin.cache.method`` but for methods that return a generator (or uses :keyword:yield).  Repeated calls to this method return an
     object that can be used to iterate over the generated values from the start::
 
-        class Example(object):
+        >>> class Example(object):
+        >>> 
+        >>>     @fin.cache.generator
+        >>>     def slow_range(self, num):
+        >>>         for i in range(num):
+        >>>             time.sleep(0.2)
+        >>>             yield i
 
-            @fin.cache.generator
-            def slow_range(self, num):
-                for i in range(num):
-                    time.sleep(0.2)
-                    yield i
+        >>> e = Example()
+        >>> e.slow_range(10)
+        <fin.cache.TeeGenerator at 0x7f9041062650> # Fast
+        >>> list(e.slow_range(10))
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]             # Slow
+        >>> list(e.slow_range(10))
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]             # Fast (already calculated)
+        >>> list(e.slow_range(5))
+        [0, 1, 2, 3, 4]                            # Slow (different arguments used)
+        >>> list(Example().slow_range(10))
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]             # Slow (different instance used)
+        >>> Example.slow_range.reset(e) # Free the memory..
+        >>> list(e.slow_range(10))
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]             # Slow (cache has been cleared)
 
-        e = Example()
-        print "Fast - generator not enumerated:", e.slow_range(10)
-        print "Slow - initial evaluation:", list(e.slow_range(10))
-        print "Fast - values cached:", list(e.slow_range(10))
-        print "Slow - arguments differ:", list(e.slow_range(5))
-        print "Slow - Different object:", list(Example().slow_range(10))
-        Example.slow_range.reset(e)            # Free the memory..
-        print "Slow - recalculating:", list(e.slow_range(10))
+    The generator is evaluated on-demand, and lazily, so the following works:
+
+        >>> timeit(lambda: list(e.slow_range(3)), number=1)
+        # Takes 0.6 seconds to evaluate the list
+        0.60060    #  [0, 1, 2]
+        >>> e.slow_range.reset(e)
+        >>> timeit(lambda: zip(e.slow_range(10), e.slow_range(10)))  
+        # Both generators are being evaluated at the same time, but the time stays the same:
+        0.60075   #  [(0, 0), (1, 1), (2, 2)]
 
     """
     return _wrap_fun_with_cache(fun, GeneratorCache)
@@ -248,30 +284,36 @@ class property(object):
     """
     This decorator behaves like the builtin :keyword:`@property` decorator, but caches the results, similarly to ``fin.cache.method``::
 
-        class Example(object):
+        >>> class Example(object):
 
-            @fin.cache.property
-            def number(self):
-                time.sleep(1)
-                return 4
+        >>>     @fin.cache.property
+        >>>     def number(self):
+        >>>         time.sleep(1)
+        >>>         return 4
 
-        e = Example()
-        print "Slow:", e.number
-        print "Fast:", e.number
-        Example.number.reset(e)
-        print "Slow:", e.number
+        >>> e = Example()
+        >>> print "Slow:", e.number
+        Slow: 4  (1 second later)
+        >>> print "Fast:", e.number
+        Fast: 4  (immediately)
+        >>> E.number.reset(e)
+        >>> print "Slow:", e.number
+        Slow: 4  (1 second later)
 
-    For historic reasons, `@fin.cache.property` descriptors support assignment.  The attribute can be assigned a callable, 
-    taking one argument, which will always be called on attribute access, and the result returned.  This is best shown by an example, continuing from the previous::
+    :func:`@fin.cache.property` descriptors support assignment.  The attribute can be assigned a callable, 
+    taking one argument, which will always be called on attribute access, and the result returned.  
+    This is best shown by an example, continuing from the previous::
 
-        e = Example()
-        f = Example()
-        print e.number, f.number  # 4 4
-        e.number = lambda e: 8
-        print e.number, f.number  # 8 4
-        e.number = lambda e: int((time.time() * 10000) % 100)
-        print e.number, f.number  # 80 4
-        print e.number, f.number  # 92 4
+        >>> e = Example()
+        >>> f = Example()
+        >>> print(e.number, f.number)
+        4 4
+        >>> f.number = lambda e: 8
+        >>> print(e.number, f.number, f.number)
+        4 8 8
+        >>> e.number = lambda e: random.randint(1, 10)
+        >>> print(e.number, f.number, f.number)
+        4 5 9
 
     """
 
@@ -298,38 +340,66 @@ class property(object):
 
     def reset(self, inst):
         """
-        'Forgets' any cached value for instance :attr:inst.  Use as shown in in the example above.  
+        'Forgets' any cached value for instance ``inst``.  Use as shown in in the example above.  
         """
         self._method.reset(inst)
 
     def has_cached(self, inst):
         """
-        Returns :keyword:True if there is a result cached for the property on the specified instance::
+        Returns :keyword:`True` if a result has been  cached for the property on the specified instance:
 
-            class Example(object):
+            >>> class Example(object):
+            >>>
+            >>>     @fin.cache.property
+            >>>     def one(self):
+            >>>         return 1
 
-                @fin.cache.property
-                def one(self):
-                    return 1
-
-            e = Example()
-            assert Example.one.has_cached(e) == False
-            assert e.one == 1
-            assert Example.one.has_cached(e) == True
-            Example.one.reset(e)
-            assert Example.one.has_cached(e) == False
+            >>> e = Example()
+            >>> Example.one.has_cached(e)
+            False
+            >>> e.one
+            1
+            >>> Example.one.has_cached(e)
+            True
+            >>> Example.one.reset(e)
+            >>> Example.one.has_cached(e)
+            False
         """
         return self._method.has_cached(inst)
 
 
 def uncached_property(fun):
     """
-    Behaves like the builtin :keyword:`@property` decorator, but supports the same assignment logic as ``@fin.cache.property``.  This method performs **no** caching.
+    Behaves like the builtin :keyword:`@property` decorator, but supports the same assignment logic as ``@fin.cache.property``.  
+    This method performs **no** caching, but is syntactic sugar.
     """
     return property(fun, wrapper=lambda x: x)
     
 
 def invalidates(other):
+    """
+    Explicitly clears another cached method when this method is called, on the same object:
+
+        >>> class Dice(object):
+        >>>     @fin.cache.property
+        >>>     def current_value(self):
+        >>>         return random.randint(1, 7)
+        >>>
+        >>>     @fin.cache.invalidates(current_value)
+        >>>     def roll(self):
+        >>>         print("Rolling...")
+
+        >>> die = Dice()
+        >>> die.current_value
+        1
+        >>> die.current_value
+        1
+        >>> die.roll()
+        >>> die.current_value
+        5
+
+
+    """
     def wrap(fun):
         @functools.wraps(fun)
         def invalidate_then_call(ob, *args, **kwargs):

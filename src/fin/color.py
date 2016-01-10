@@ -49,6 +49,12 @@ class Color(object):
 
 class NoColor(Color):
 
+    """
+    A color class for when no color information should be output.  For example, if output can be redirected to a terminal
+    OR a log file, NoColor can be transparently swapped in for the VtColor class to ensure that the data in the log file does
+    not include a large number of escape codes.
+    """
+
     def __getitem__(self, name):
         return self
 
@@ -58,14 +64,48 @@ class NoColor(Color):
 
 class VtColor(Color):
 
+    """
+    The color class for VT-compatible terminals (basically all non-windows terminals).
+
+    The color attributes may be used in two ways.  Getting a color is a matter of referencing the correct attribute::
+
+        >>> C.red
+        <fin.color.VtColor at 0x7f904012fb90>
+
+    This may then be converted to a string, for printing::
+
+        >>> str(C.red)
+        '\\x1b[34m'
+        >>> C.red + "foo" + C.reset
+        '\\x1b[31mfoo\\x1b[0m'
+
+    The alternate syntax is to `call` the color, passing in a string, which implicitly add the color code before the string, 
+    and adds a reset afterwards (NOTE: the reset will reset all color information, including any inherited)::
+
+        >>> C.red("hello") + C.blue("world")
+        '\\x1b[31mhello\\x1b[0m\\x1b[34mworld\\x1b[0m'
+
+    Printing any of the above in a standard (non-windows) terminal, will result in the correct colored output.
+
+    The available colors are listed below.  All colors may be prefixed with 'bg_', and colors may be combined by further attribute access::
+
+        >>> C.bg_blue.white.bold("Bold, white-on-blue text")
+        '\\x1b[44;37;1mBold, white-on-blue text\\x1b[0m'
+
+    Two special attributes:  'bold', and 'reset' respectively turn the text bold (or use bright colors, depending on console)
+    and reset all color attributes.
+    """
+
     COLORS = ["black", "red", "green", "yellow",
               "blue", "purple", "cyan", "white"]
+    """ All colors that may be referenced """
     FG_BASE = 30
     BG_BASE = 40
     EXTRA = {
         "bold": 1,
         "reset": 0,
     }
+    """ Non-color attributes """
 
     def _get_value(self, name):
         name = name.lower()
@@ -102,8 +142,11 @@ KNOWN_TERMINAL_TYPES = set([
 
 def auto_color(stream=sys.stdin):
     """
-    Depending on environment variables, and if :attr:`stream` is a tty, return a Color object that will output
-    colored text, or one that outputs plain text.
+    This does some simple tests to determine if the output stream supports colors, returning the corect Color class
+    for the stream.
+
+    The lookup is intentionally kept simple, as this has proved to capture 99% of cases without adding the burden 
+    of more complicated capabilities databases.
     """
     term_name = os.environ.get("TERM", "").lower()
     if (stream.isatty()
@@ -113,4 +156,14 @@ def auto_color(stream=sys.stdin):
 
 
 C = auto_color()
+"""
+An instance of :class:`Color` that is most appropriate for sys.stdout.  
+Typically this will be a VtColor object, but when stdout is redirected to a file, or other non-terminal output
+then it will revert to NoColor.
 
+This constant allows code to simply refer to, for example::
+
+    >>> fin.color.C.blue('hi')
+    '\\x1b[34mhi\\x1b[0m'
+
+"""

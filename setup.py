@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 if __name__ == "__main__":
     setup(
         name="fin",
-        version="2.1.3",
+        version="2.1.4",
         license="BSD",
 
         description="A small, useful python utility library",

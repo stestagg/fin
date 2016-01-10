@@ -1,9 +1,6 @@
 import functools
 
 
-_property = property
-
-
 class DuplexMethod(object):
 
 	def __init__(self, func, class_method=None, inst_lookup_fun=None):
@@ -11,14 +8,25 @@ class DuplexMethod(object):
 		self.class_method = class_method
 		self.inst_lookup_fun = inst_lookup_fun
 
+	def make_wrapper(self, finder, *args, **kwargs):
+		@functools.wraps(self.func)
+		def runner(*args, **kwargs):
+			obj = finder()
+			return self.func(obj, *args, **kwargs)
+
 	def __get__(self, obj, cls=None):
 		if obj is None:
 			if self.class_method is not None:
-				return self.class_method.__get__(cls, cls)
-			elif self.inst_lookup_fun is not None:
-				obj = self.inst_lookup_fun(cls)
-			else:
-				obj = cls
+					return self.class_method.__get__(cls, cls)
+
+			@functools.wraps(self.func)
+			def run_wrapped(*args, **kwargs):
+				if self.inst_lookup_fun is not None:
+					obj = self.inst_lookup_fun(cls)
+				else:
+					obj = cls
+				return self.func.__get__(obj, cls)(*args, **kwargs)
+			return run_wrapped
 		return self.func.__get__(obj, cls)
 
 	def classmethod(self, func):
