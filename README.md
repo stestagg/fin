@@ -7,4 +7,5 @@ A small library that allows you to awesome things, really simply, like this:
 ![fin](https://raw.githubusercontent.com/stestagg/fin/master/doc/contextlog.gif)
 
 Install:  pip install fin
+
 Docs at:  http://fin.readthedocs.org/en/latest/#
