@@ -27,8 +27,8 @@ exclude_patterns = []
 
 html_theme_path = ['_themes']
 html_theme = 'flask'
-
-html_static_path = ['.static']
+html_logo = 'logosmall.png'
+html_static_path = ['_static']
 
 htmlhelp_basename = 'findoc'
 
