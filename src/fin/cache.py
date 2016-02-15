@@ -1,12 +1,13 @@
 
 import functools
 import copy
+import contextlib
 
 # Class objects do not like having their __dict__ members
 # twiddled directly, so we have to use strings here
 CACHE_KEY = "__FIN_CACHE"
 PROPERTY_OVERRIDE_KEY = "__PROPERTY_CACHE"
-DEPENDANCIES = object()
+DEPENDENCIES = object()
 
 
 def _hasattr(obj, key):
@@ -34,6 +35,15 @@ class ResultCache(object):
         if self.has_cached(obj):
             del getattr(obj, CACHE_KEY)[self._fun]
 
+    @contextlib.contextmanager
+    def temporary_cache(self, obj):
+        old_cache = self.get_cache(obj)
+        try:
+            getattr(obj, CACHE_KEY)[self._fun] = ({}, [])
+            yield
+        finally:
+            getattr(obj, CACHE_KEY)[self._fun] = old_cache
+
     def has_cached(self, obj):
         return _hasattr(obj, CACHE_KEY) and self._fun in getattr(obj, CACHE_KEY)
 
@@ -42,7 +52,7 @@ class ResultCache(object):
 
     def _get_result(self, obj, args, kwargs):
         dict_cache, list_cache = self.get_cache(obj)
-        arg_key = (self.get_dependancies(obj), args, tuple(kwargs.items()))
+        arg_key = (self.get_dependencies(obj), args, tuple(kwargs.items()))
         try:
             hash(arg_key)
             hashable = True
@@ -64,11 +74,11 @@ class ResultCache(object):
     def get_result(self, obj, args, kwargs):
         return self._get_result(obj, args, kwargs)
 
-    def get_dependancies(self, obj):
-        dependancies = self._fun.__dict__.get(DEPENDANCIES)
-        if dependancies is None:
+    def get_dependencies(self, obj):
+        dependencies = self._fun.__dict__.get(DEPENDENCIES)
+        if dependencies is None:
             return None
-        return tuple(getattr(obj, dep) for dep in dependancies)
+        return tuple(getattr(obj, dep) for dep in dependencies)
 
 
 class GeneratorCache(ResultCache):
@@ -167,7 +177,7 @@ def depends(*attributes):
     value needlessly.
     """
     def mutate(fun):
-        fun.__dict__[DEPENDANCIES] = attributes
+        fun.__dict__[DEPENDENCIES] = attributes
         return fun
     return mutate
 
@@ -178,8 +188,11 @@ def _wrap_fun_with_cache(fun, cache_type):
     @functools.wraps(fun)
     def wrapper(obj, *args, **kwargs):
         return cache.get_result(obj, args, kwargs)
-    wrapper.reset = cache.reset
-    wrapper.has_cached = cache.has_cached
+
+    for method_name in ['reset', 'has_cached', 'temporary_cache']:
+        bound_method = getattr(cache, method_name, None)
+        if bound_method is not None:
+            setattr(wrapper, method_name, bound_method)
     return wrapper
 
 
@@ -232,6 +245,11 @@ def method(fun):
     When used on an instance method, rather than a classmethod, the object instance should be passed into reset.
     """
     return _wrap_fun_with_cache(fun, ResultCache)
+
+_classmethod = classmethod
+
+def classmethod(fun):
+    return _classmethod(_wrap_fun_with_cache(fun, ResultCache))
 
 
 def generator(fun):
@@ -320,6 +338,7 @@ class property(object):
     def __init__(self, fun, wrapper=method):
         self._method = wrapper(fun)
         self.__doc__ = getattr(fun, "__doc__", None)
+        self.temporary_cache = self._method.temporary_cache
 
     def __get__(self, inst, cls):
         if inst is None:

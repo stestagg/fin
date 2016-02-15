@@ -382,8 +382,7 @@ class TestCacheSharing(fin.testing.TestCase):
     def test_sharing_caches(self):
         counter = itertools.count()
         class Foo(object):
-            @classmethod
-            @fin.cache.method
+            @fin.cache.classmethod
             def foo(cls):
                 return next(counter)
 
@@ -416,5 +415,62 @@ class TestCacheSharing(fin.testing.TestCase):
         self.assertEqual(B.foo(), 2)
 
 
+class TestClassmethod(fin.testing.TestCase):
+
+    def test_classmethod(self):
+        counter = itertools.count()
+        class Foo(object):
+            @fin.cache.classmethod
+            def foo(cls):
+                return next(counter)
+
+        first = Foo.foo()
+        inst = Foo()
+        second = inst.foo()
+        third = Foo.foo()
+        self.assertEqual(first, second)
+        self.assertEqual(first, third)
+
+
+class TestTemporaryContext(fin.testing.TestCase):
+
+    def test_method(self):
+        meth_vals = iter([1, 2, 3, 4, 5, 6])
+        class Foo(object):
+            
+            @fin.cache.method
+            def meth(cls, *args, **kwargs):
+                return next(meth_vals)
+
+        foo = Foo()
+        self.assertEqual(foo.meth('a', 1), 1)
+        self.assertEqual(foo.meth('b', 2), 2)
+        self.assertEqual(foo.meth({}), 3)
+
+        with Foo.meth.temporary_cache(foo):
+            self.assertEqual(foo.meth('a', 1), 4)
+            self.assertEqual(foo.meth('b', 2), 5)
+            self.assertEqual(foo.meth({}), 6)
+        self.assertEqual(foo.meth('a', 1), 1)
+        self.assertEqual(foo.meth('b', 2), 2)
+        self.assertEqual(foo.meth({}), 3)
+    
+    def test_property(self):
+        prop_vals = iter([1,2, 3])
+        class Foo(object):
+            @fin.cache.property
+            def prop(self):
+                return next(prop_vals)
+
+        foo = Foo()
+        self.assertEqual(foo.prop, 1)
+        self.assertEqual(foo.prop, 1)
+        with Foo.prop.temporary_cache(foo):
+            self.assertEqual(foo.prop, 2)
+        self.assertEqual(foo.prop, 1)
+        with Foo.prop.temporary_cache(foo):
+            self.assertEqual(foo.prop, 3)
+        self.assertEqual(foo.prop, 1)
+            
 if __name__ == "__main__":
     fin.testing.main()
