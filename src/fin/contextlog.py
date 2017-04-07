@@ -15,7 +15,7 @@ import fin.duplex
 
 
 THEMES = {
-    "default": {
+    "plain": {
         "OK": lambda C: C.green.bold("OK"),
         "FAIL": lambda C: C.red.bold("FAIL"),
         "CHILD_PADD": lambda C: "| ",
@@ -34,7 +34,7 @@ THEMES = {
         "FAIL": lambda C: C.red.bold(u"✗"),
         "CHILD_PADD": lambda C: C.purple(u"│ "),
         "LAST_LINE": lambda C: C.purple(u"└ "),
-        "OUTPUT_PREFIX": lambda C: C.purple.bold(u"▻"),  
+        "OUTPUT_PREFIX": lambda C: C.purple.bold(u"▻"),
     }
 }
 
