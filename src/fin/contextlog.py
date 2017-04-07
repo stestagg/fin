@@ -59,8 +59,7 @@ def find_open_log(cls):
     for stack in cls.LOGS.values():
         if len(stack) > 0:
             return stack[-1]
-    return output
-    #raise ValueError("Cannot find a suitable context log to output to")
+    raise ValueError("Cannot find a suitable context log to output to")
 
 
 class Log(object):
@@ -93,7 +92,7 @@ class Log(object):
     def __init__(self, message,
                  ok_msg=None,
                  fail_msg=None,
-                 theme="default",
+                 theme="mac",
                  stream=sys.stderr):
         self.message = message
         self.theme = theme
@@ -168,6 +167,8 @@ class Log(object):
     def __exit__(self, exc_type, exc_value, tb):
         rv = None
         msg = None
+        while self.stack and self.stack[-1] != self:
+            self.stack[-1].__exit__(None, None, None)
         self.stack.remove(self)
         if exc_type is not None and issubclass(exc_type, LeaveLogException):
             rv = True

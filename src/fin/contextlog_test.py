@@ -157,6 +157,13 @@ class ContextLogTests(unittest.TestCase):
                 except IndexError:
                     pass
 
+    def test_not_closing_context(self):
+        stream = io.BytesIO()
+        with fin.contextlog.Log("Foo", stream=stream):
+            fin.contextlog.Log("Bar", stream=stream).__enter__()
+        with fin.contextlog.Log("Baz", stream=stream):
+            pass
+        self.assertEqual(stream.getvalue(), b'Foo: \n| Bar: OK\n`- OK\nBaz: OK\n')
 
 if __name__ == "__main__":
     unittest.main()
