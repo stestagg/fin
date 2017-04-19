@@ -21,6 +21,7 @@ THEMES = {
         "CHILD_PADD": lambda C: "| ",
         "LAST_LINE": lambda C: "`- ",
         "OUTPUT_PREFIX": lambda C: "+",
+        "START": lambda C, l: l
     },
     "aa": {
         "OK": lambda C: C.green.bold("OK"),
@@ -28,14 +29,16 @@ THEMES = {
         "CHILD_PADD": lambda C: C.purple("│ "),
         "LAST_LINE": lambda C: C.purple("└ "),
         "OUTPUT_PREFIX": lambda C: C.purple("▻"),
+        "START": lambda C, l: l
     },
     "mac": {
         "OK": lambda C: C.green.bold(u"✓"),
         "FAIL": lambda C: C.red.bold(u"✗"),
         "CHILD_PADD": lambda C: C.purple(u"│ "),
-        "LAST_LINE": lambda C: C.purple(u"└ "),
+        "LAST_LINE": lambda C: C.purple(u"╰ "),
         "OUTPUT_PREFIX": lambda C: C.purple.bold(u"▻"),
-    }
+        "START": lambda C, l: C.purple.bold(l)
+    },
 }
 
 
@@ -61,12 +64,15 @@ def find_open_log(cls):
             return stack[-1]
     raise ValueError("Cannot find a suitable context log to output to")
 
+DEFAULT_STREAM = sys.stderr
+if hasattr(sys.stderr, "buffer"):
+    DEFAULT_STREAM = sys.stderr.buffer.raw
 
 class Log(object):
 
     """A logging context manager that provides easy to understand, and useful console output.
 
-    Multiple logs may be nested (provided they use the same output stream) and 
+    Multiple logs may be nested (provided they use the same output stream) and
     the output reflects this, allowing for complex processing to be reflected simply to the user
 
     :Example:
@@ -78,9 +84,9 @@ class Log(object):
     >>>         pass
 
     :param message: A string to be output when the context manager is entered
-    :param ok_msg: Defaults to the theme-specific 'OK' message.  
+    :param ok_msg: Defaults to the theme-specific 'OK' message.
                     The string that is printed if the Context manager exits without error
-    :param fail_msg: Defaults to the theme-specific 'Fail' message.  
+    :param fail_msg: Defaults to the theme-specific 'Fail' message.
                     The string that is printed if the Context manager detects an exception
     :param theme: contextlib has several themes that control how the output is displayed, common ones are 'default', 'aa', and 'mac'
                     Note, for performance reasons, themes cannot be mixed on the same stream.
@@ -93,7 +99,7 @@ class Log(object):
                  ok_msg=None,
                  fail_msg=None,
                  theme="mac",
-                 stream=sys.stderr):
+                 stream=DEFAULT_STREAM):
         self.message = message
         self.theme = theme
         self.open = False
@@ -114,10 +120,10 @@ class Log(object):
         self.has_child = False
         self.level = None
 
-    def _theme_item(self, item, color=None):
+    def _theme_item(self, item, color=None, *args):
         if color is None:
             color = self.color
-        return THEMES[self.theme][item](color)
+        return THEMES[self.theme][item](color, *args)
 
     @property
     def stack(self):
@@ -125,7 +131,8 @@ class Log(object):
 
     def enter_message(self, suffix=""):
         prefix = self._theme_item("CHILD_PADD") * self.level
-        return u"%s%s: %s" % (prefix, self.message, suffix)
+        message = self._theme_item("START", self.color, self.message)
+        return u"%s%s: %s" % (prefix, message, suffix)
 
     def _write(self, data):
         self.stream.write(self.stream_encoder(data))
@@ -197,7 +204,7 @@ class Log(object):
         for line in msg.splitlines():
             line = line.rstrip()
             full = "%s%s %s\n" % (
-                self._theme_item("CHILD_PADD") * (self.level + 1), 
+                self._theme_item("CHILD_PADD") * (self.level + 1),
                 self._theme_item("OUTPUT_PREFIX"),
                 line)
             self._write(full)
@@ -208,7 +215,7 @@ class Log(object):
         """
         As Log.output, but provides prettier output.  Using pformat, color-based substitution, and word wrapping.
 
-        :param msg: If msg is a string, any args or kwargs are used in percent subsitutions, 
+        :param msg: If msg is a string, any args or kwargs are used in percent subsitutions,
                     with the subsitution values output in a different color.  log.format('user %s', user.name)
                     might  output '|+ user *bob*' (where bob is displayed in blue)
         :param msg: If msg is not a string, then pprint.pformat is called on it, and the result is output
@@ -222,7 +229,7 @@ class Log(object):
         elif kwargs:
             msg = msg % ColorFakeDict(self.color, args, kwargs)
         cols, rows = fin.terminal.terminal_size()
-        plain_prefix = (self._theme_item("CHILD_PADD", fin.color.NoColor()) * (self.level + 1) 
+        plain_prefix = (self._theme_item("CHILD_PADD", fin.color.NoColor()) * (self.level + 1)
                         + self._theme_item("OUTPUT_PREFIX", fin.color.NoColor()))
         plain_prefix = plain_prefix
         prefix_len = len(plain_prefix)
@@ -237,7 +244,7 @@ class CLog(Log):
     """A logging context manager, similar to :class:`fin.contextlog.Log`, that only produces output if an exception occurs
         or log.output()/log.format() is called.
 
-       This means that an app/script that uses CLog could run silently if there are no errors, 
+       This means that an app/script that uses CLog could run silently if there are no errors,
        but show all the context if/when an error does occur
     """
 
